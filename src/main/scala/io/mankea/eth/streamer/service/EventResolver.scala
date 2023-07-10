@@ -1,20 +1,25 @@
-package io.mankea.eth.streamer
+package io.mankea.eth.streamer.service
 
 import org.web3j.abi.{EventEncoder, TypeReference}
 import org.web3j.abi.datatypes.{Address, Event, Utf8String}
 import org.web3j.abi.datatypes.generated.{Bytes32, Uint256}
 
-import scala.collection.convert.ImplicitConversionsToJava.`seq AsJavaList`
+import scala.collection.convert.ImplicitConversionsToJava.*
+
+trait LoggedEvent
+
+case class Transfer(from: String, to: String, amount: BigInt)
+case class RoleUpdated(objectId: String, contextId: String, roleId: String, funcName: String)
 
 object EventResolver {
 
-  val events: Map[String, List[TypeReference[_]]] = Map(
+  private val events: Map[String, List[TypeReference[_]]] = Map(
     "Transfer(address,address,uint256)" -> List(
       new TypeReference[Address](true) {},
       new TypeReference[Address](true) {},
       new TypeReference[Uint256](false) {}
     ),
-    "RoleUpdate,bytes32,bytes32,string)" -> List(
+    "RoleUpdated(bytes32,bytes32,string)" -> List(
       new TypeReference[Bytes32](true) {},        //  objectId
       new TypeReference[Bytes32](false) { },   //  contextId
       new TypeReference[Bytes32](false) {},    //  roleId
