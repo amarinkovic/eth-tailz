@@ -8,56 +8,63 @@ import org.web3j.protocol.core.methods.request.EthFilter
 import org.web3j.protocol.core.methods.response.{EthBlock, EthLog}
 import org.web3j.protocol.core.methods.response.EthLog.LogObject
 import org.web3j.protocol.http.HttpService
-import zio._
+import zio.*
 import zio.stream.ZStream
+import io.mankea.eth.streamer.service._
 
 import java.math.BigInteger
 import scala.jdk.CollectionConverters.*
 
-case class LogEvent(blockNumber: BigInt, transactionHash: String, logIndex: String, data: String)
+case class LogEvent(blockNumber: BigInt, transactionHash: String, logIndex: Long, event: String)
 
 trait Web3Service {
-  def getBlockNumber: Task[BigInteger]
-  def getLogs(contractAddress: String, from: Int, to: Int): Task[List[LogEvent]]
-  def streamLogs(contractAddress: String, from: Int): ZStream[Any, Throwable, LogEvent]
+  def getCurrentBlockNumber: Task[BigInteger]
+  def getLogs(contractAddress: String, from: BigInteger, to: BigInteger): Task[List[LogEvent]]
+  def streamLogs(contractAddress: String, from: Long): ZStream[Any, Throwable, LogEvent]
   def streamBlocks: ZStream[Any, Throwable, EthBlock]
 }
 
 case class Web3ServiceImpl(web3j: Web3j) extends Web3Service{
-  override def getBlockNumber: Task[BigInteger] =
-    ZIO.attempt(web3j.ethBlockNumber().send().getBlockNumber)
 
-  override def getLogs(contractAddress: String, from: Int, to: Int): Task[List[LogEvent]] =
+  override def getCurrentBlockNumber: Task[BigInteger] =
+    ZIO.attempt(web3j.ethBlockNumber.send.getBlockNumber)
+
+  override def getLogs(contractAddress: String, from: BigInteger, to: BigInteger): Task[List[LogEvent]] =
+    println(s"getting logs: ${from.longValueExact()} -> ${to.longValueExact()}")
     ZIO.attempt {
       val filter = new org.web3j.protocol.core.methods.request.EthFilter(
-        DefaultBlockParameterName.EARLIEST,
-        DefaultBlockParameterName.LATEST,
+        DefaultBlockParameter.valueOf(from),
+        DefaultBlockParameter.valueOf(to),
         contractAddress
       )
 
       val logs = web3j.ethGetLogs(filter).send().getLogs.asScala.toList
+      println(s"Got ${logs.size} events")
+
       logs.map { log =>
         val logResult = log.asInstanceOf[LogObject]
 
-        val event = EventResolver.get(logResult.getTopics().get(0))
-        val eventValues = FunctionReturnDecoder.decode(logResult.getData, event.getIndexedParameters)
+//        val event = get(logResult.getTopics.get(0))
+//        val eventValues = FunctionReturnDecoder.decode(logResult.getData, event.getIndexedParameters)
 
         // eventValues.get(0).asInstanceOf[Address].getValue()
 
         println(s"log: $logResult")
         LogEvent(
-          BigInt.long2bigInt(logResult.getBlockNumber.longValueExact()),
+            BigInt.javaBigInteger2bigInt(logResult.getBlockNumber),
           logResult.getTransactionHash,
-          logResult.getLogIndexRaw,
-          logResult.getData
+          logResult.getLogIndex.longValueExact,
+          logResult.getTopics.get(0)
         )
       }
     }
 
-  override def streamLogs(contractAddress: String, from: Int): ZStream[Any, Throwable, LogEvent] =
+  override def streamLogs(contractAddress: String, from: Long): ZStream[Any, Throwable, LogEvent] =
     ZStream.unwrap {
       for {
-        logs <- getLogs(contractAddress, from, from  + 1000)
+        currentBlock <- getCurrentBlockNumber
+        to <- ZIO.succeed(currentBlock.min(BigInteger.valueOf(from + 1000)))
+        logs <- getLogs(contractAddress, BigInteger.valueOf(from), to)
       } yield ZStream.fromIterable(logs)
     }
   //.repeat(Schedule.spaced(interval))
@@ -71,7 +78,10 @@ case class Web3ServiceImpl(web3j: Web3j) extends Web3Service{
 object Web3Service {
 
   def getBlockNumber: ZIO[Web3Service, Throwable, BigInteger] =
-    ZIO.serviceWithZIO[Web3Service](_.getBlockNumber)
+    ZIO.serviceWithZIO[Web3Service](_.getCurrentBlockNumber)
+
+  def getLogs(contractAddress: String, from: BigInteger, to: BigInteger): ZIO[Web3Service, Throwable, List[LogEvent]] =
+    ZIO.serviceWithZIO[Web3Service](_.getLogs(contractAddress, from, to))
 
   val live: ZLayer[AppConfig, Nothing, Web3Service] =
     ZLayer {

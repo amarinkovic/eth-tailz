@@ -6,7 +6,7 @@ import org.web3j.abi.datatypes.generated.{Bytes32, Uint256}
 
 import scala.collection.convert.ImplicitConversionsToJava.*
 
-trait LoggedEvent
+final case class EventDescriptor(name: String, types: List[TypeReference[_]])
 
 case class Transfer(from: String, to: String, amount: BigInt)
 case class RoleUpdated(objectId: String, contextId: String, roleId: String, funcName: String)
@@ -29,7 +29,7 @@ object EventResolver {
     case (key, value) => (EventEncoder.buildEventSignature(key), value)
   }
 
-  def get(topic: String): Event = Event(topic, events(topic))
+  def get(topic: String): EventDescriptor = EventDescriptor(topic, events.getOrElse(topic, List.empty))
 
 }
 
