@@ -24,7 +24,9 @@ trait Web3Service {
   def streamBlocks: ZStream[Any, Throwable, EthBlock]
 }
 
-case class Web3ServiceImpl(web3j: Web3j) extends Web3Service{
+case class Web3ServiceImpl(web3j: Web3j) extends Web3Service {
+
+  private val eventResolver = EventResolver()
 
   override def getCurrentBlockNumber: Task[BigInteger] =
     ZIO.attempt(web3j.ethBlockNumber.send.getBlockNumber)
@@ -49,17 +51,11 @@ case class Web3ServiceImpl(web3j: Web3j) extends Web3Service{
 
         // eventValues.get(0).asInstanceOf[Address].getValue()
 
-        println(s"log: $logResult")
         LogEvent(
-            BigInt.javaBigInteger2bigInt(logResult.getBlockNumber),
+          BigInt.javaBigInteger2bigInt(logResult.getBlockNumber),
           logResult.getTransactionHash,
           logResult.getLogIndex.longValueExact,
-          logResult.getTopics.get(0) match {
-            case "0x3ed12c13d0bb497300280ace747c30f49edef4b4d814ac5c2a6395f256fa6c97" => "InitializeDiamond"
-            case "0x736c56e4bb16c438047d822d53251d5034edf27808ac582857e8863b898c9529" => "RoleCanAssignUpdated"
-            case "0x8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0" => "OwnershipTransferred"
-            case _  => logResult.getTopics.get(0)
-          }
+          eventResolver.getName(logResult.getTopics.get(0))
         )
       }
     }

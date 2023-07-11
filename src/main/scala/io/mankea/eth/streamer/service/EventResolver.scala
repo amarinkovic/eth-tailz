@@ -1,36 +1,40 @@
 package io.mankea.eth.streamer.service
 
-import org.web3j.abi.{EventEncoder, TypeReference}
-import org.web3j.abi.datatypes.{Address, Event, Utf8String}
+import io.mankea.eth.streamer.config.AppConfig
 import org.web3j.abi.datatypes.generated.{Bytes32, Uint256}
+import org.web3j.abi.datatypes.{Address, Event, Utf8String}
+import org.web3j.abi.{EventEncoder, TypeReference}
+import org.web3j.protocol.Web3j
+import org.web3j.protocol.http.HttpService
 
-import scala.collection.convert.ImplicitConversionsToJava.*
+import java.math.BigInteger
+import scala.jdk.CollectionConverters.*
 
-final case class EventDescriptor(name: String, types: List[TypeReference[_]])
+class EventResolver {
 
-case class Transfer(from: String, to: String, amount: BigInt)
-case class RoleUpdated(objectId: String, contextId: String, roleId: String, funcName: String)
+  // event InitializeDiamond(address sender)
+  // event RoleCanAssignUpdated(string role, string group)
+  // event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)
 
-object EventResolver {
+  private val events: Map[String, Event] = List(
+    new Event("InitializeDiamond", List(
+      new TypeReference[Address](false) {}
+    ).asJava),
 
-  private val events: Map[String, List[TypeReference[_]]] = Map(
-    "Transfer(address,address,uint256)" -> List(
+    new Event("RoleCanAssignUpdated", List(
+      new TypeReference[Utf8String](false) {},
+      new TypeReference[Utf8String](false) {}
+    ).asJava),
+
+    new Event("OwnershipTransferred", List(
       new TypeReference[Address](true) {},
-      new TypeReference[Address](true) {},
-      new TypeReference[Uint256](false) {}
-    ),
-    "RoleUpdated(bytes32,bytes32,string)" -> List(
-      new TypeReference[Bytes32](true) {},        //  objectId
-      new TypeReference[Bytes32](false) { },   //  contextId
-      new TypeReference[Bytes32](false) {},    //  roleId
-      new TypeReference[Utf8String](false) {} //  functionName
-    )
-  ).map {
-    case (key, value) => (EventEncoder.buildEventSignature(key), value)
-  }
+      new TypeReference[Address](true) {}
+    ).asJava)
+  ).map { event =>
+    (EventEncoder.encode(event), event)
+  }.toMap
 
-  def get(topic: String): EventDescriptor = EventDescriptor(topic, events.getOrElse(topic, List.empty))
-
+  def getName(topic: String): String = events.get(topic).map(_.getName).getOrElse(topic)
 }
 
 //  TODO
