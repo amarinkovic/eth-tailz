@@ -37,8 +37,13 @@ object App extends ZIOAppDefault {
   val stream = logStream(contractAddress, from)
   private val toStringPipe = ZPipeline.map[LogEvent, String](l => s"block: ${l.blockNumber} | tx: ${l.transactionHash} | ${l.logIndex} | ${l.event}")
 
-  def run = stream.via(toStringPipe)
-    .tap(l => Console.printLine(l))
+  def run = stream
+    .filter {
+      case LogEvent(_, _, _, Unsupported(_)) => false
+      case _ => true
+    }
+    .via(toStringPipe)
+    .tap(Console.printLine(_))
     .runDrain
     .provide(
       Web3Service.live,
@@ -49,7 +54,7 @@ object App extends ZIOAppDefault {
 //    web3 <- ZIO.service[Web3Service]
 //    bn <- web3.getCurrentBlockNumber
 //    _ <- Console.printLine(bn)
-//  } yield (bn)
+//  } yield ()
 //  def run = program
 //    .provide(Web3Service.live, AppConfig.layer)
 
