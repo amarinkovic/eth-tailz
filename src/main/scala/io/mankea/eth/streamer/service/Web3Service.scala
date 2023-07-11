@@ -6,7 +6,7 @@ import org.web3j.protocol.core.{DefaultBlockParameter, DefaultBlockParameterName
 import org.web3j.protocol.{Web3j, Web3jService}
 import org.web3j.protocol.core.methods.request.EthFilter
 import org.web3j.protocol.core.methods.response.{EthBlock, EthLog}
-import org.web3j.protocol.core.methods.response.EthLog.LogObject
+import org.web3j.protocol.core.methods.response.EthLog
 import org.web3j.protocol.http.HttpService
 import zio.*
 import zio.stream.ZStream
@@ -15,7 +15,7 @@ import io.mankea.eth.streamer.service._
 import java.math.BigInteger
 import scala.jdk.CollectionConverters.*
 
-case class LogEvent(blockNumber: BigInt, transactionHash: String, logIndex: Long, event: String)
+case class LogEvent(blockNumber: BigInt, transactionHash: String, logIndex: Long, event: TypedEvent)
 
 trait Web3Service {
   def getCurrentBlockNumber: Task[BigInteger]
@@ -44,18 +44,12 @@ case class Web3ServiceImpl(web3j: Web3j) extends Web3Service {
       println(s"Got ${logs.size} events")
 
       logs.map { log =>
-        val logResult = log.asInstanceOf[LogObject]
-
-//        val event = get(logResult.getTopics.get(0))
-//        val eventValues = FunctionReturnDecoder.decode(logResult.getData, event.getIndexedParameters)
-
-        // eventValues.get(0).asInstanceOf[Address].getValue()
-
+        val logObject = log.asInstanceOf[EthLog.LogObject]
         LogEvent(
-          BigInt.javaBigInteger2bigInt(logResult.getBlockNumber),
-          logResult.getTransactionHash,
-          logResult.getLogIndex.longValueExact,
-          eventResolver.getName(logResult.getTopics.get(0))
+          BigInt.javaBigInteger2bigInt(logObject.getBlockNumber),
+          logObject.getTransactionHash,
+          logObject.getLogIndex.longValueExact,
+          eventResolver.getTypedEvent(logObject)
         )
       }
     }

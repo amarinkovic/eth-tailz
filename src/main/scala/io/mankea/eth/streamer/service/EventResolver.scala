@@ -2,9 +2,10 @@ package io.mankea.eth.streamer.service
 
 import io.mankea.eth.streamer.config.AppConfig
 import org.web3j.abi.datatypes.generated.{Bytes32, Uint256}
-import org.web3j.abi.datatypes.{Address, Event, Utf8String}
-import org.web3j.abi.{EventEncoder, TypeReference}
+import org.web3j.abi.datatypes.{Address, Event, Type, Utf8String}
+import org.web3j.abi.{EventEncoder, FunctionReturnDecoder, TypeReference}
 import org.web3j.protocol.Web3j
+import org.web3j.protocol.core.methods.response.EthLog.LogObject
 import org.web3j.protocol.http.HttpService
 
 import java.math.BigInteger
@@ -13,18 +14,10 @@ import scala.jdk.CollectionConverters.*
 type EventType = Event
 
 trait TypedEvent
-
+case class Unsupported(topic: String) extends TypedEvent
 case class RoleUpdated(objectId: String, contextId: String, roleId: String, funcName: String) extends TypedEvent
-
-object RoleUpdated {
-  def apply(event: EventType): RoleUpdated =
-    RoleUpdated(
-      objectId = event.getParameters.get(0).getType.asInstanceOf[Bytes32].getValue.toString(),
-      contextId = event.getParameters.get(1).getType.asInstanceOf[Bytes32].getValue.toString(),
-      roleId = event.getParameters.get(2).getType.asInstanceOf[Bytes32].getValue.toString(),
-      funcName = event.getParameters.get(3).getType.asInstanceOf[Utf8String].getValue
-    )
-}
+case class RoleCanAssignUpdated(role: String, group: String) extends TypedEvent
+case class OwnershipTransferred(previousOwner: String, newOwner: String) extends TypedEvent
 
 object EventResolver {
 
@@ -60,8 +53,47 @@ object EventResolver {
 
   def getName(topic: String): String = evenTypes.get(topic).map(_.getName).getOrElse(topic)
 
-  def getType(name: String): Option[EventType] = evenTypes.get(name)
+  private def getType(topic: String): Option[EventType] = evenTypes.get(topic)
 
+  def getTypedEvent(obj: LogObject): TypedEvent = {
+    val topic = obj.getTopics.get(0)
+    val eventName = getName(topic)
+
+    getType(topic).map(t => decode(obj, t)) match {
+      case Some(allDecoded) => {
+        eventName match
+          case "RoleUpdated" =>
+            RoleUpdated(
+              objectId = allDecoded.asJava.get(0).getValue.asInstanceOf[Bytes32].getValue.toString,
+              contextId = allDecoded.asJava.get(1).getValue.asInstanceOf[Bytes32].getValue.toString,
+              roleId = allDecoded.asJava.get(2).getValue.asInstanceOf[Bytes32].getValue.toString,
+              funcName = allDecoded.asJava.get(3).getValue.asInstanceOf[Utf8String].getValue
+            )
+          case "RoleCanAssignUpdated" =>
+            RoleCanAssignUpdated(
+              role = allDecoded.asJava.get(0).getValue.toString,
+              group = allDecoded.asJava.get(1).getValue.toString
+            )
+          case "OwnershipTransferred" =>
+            OwnershipTransferred(
+              previousOwner = allDecoded.asJava.get(0).getValue.toString,
+              newOwner = allDecoded.asJava.get(1).getValue.toString
+            )
+
+          case _ => Unsupported(eventName)
+      }
+      case None => Unsupported(topic)
+    }
+  }
+
+  private def decode(logObj: LogObject, eventType: EventType): List[Type[_]] = {
+    val nonIndexedDecoded = FunctionReturnDecoder.decode(logObj.getData, eventType.getNonIndexedParameters).asScala.toList
+    val indexedDecoded = (0 until eventType.getIndexedParameters.size())
+      .map(x => {
+        FunctionReturnDecoder.decodeIndexedValue(logObj.getTopics.get(x + 1), eventType.getIndexedParameters.get(x))
+      }).toList
+    (indexedDecoded ++ nonIndexedDecoded)
+  }
 }
 
 //  TODO

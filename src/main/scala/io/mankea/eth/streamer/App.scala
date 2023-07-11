@@ -35,7 +35,7 @@ object App extends ZIOAppDefault {
   }
 
   val stream = logStream(contractAddress, from)
-  private val toStringPipe = ZPipeline.map[LogEvent, String](l => s"block: ${l.blockNumber} | tx: ${l.transactionHash} | ${l.logIndex} |  ${l.event}")
+  private val toStringPipe = ZPipeline.map[LogEvent, String](l => s"block: ${l.blockNumber} | tx: ${l.transactionHash} | ${l.logIndex} | ${l.event}")
 
   def run = stream.via(toStringPipe)
     .tap(l => Console.printLine(l))
