@@ -15,11 +15,11 @@ import io.mankea.eth.streamer.service._
 import java.math.BigInteger
 import scala.jdk.CollectionConverters.*
 
-case class LogEvent(blockNumber: BigInt, transactionHash: String, logIndex: Long, event: TypedEvent)
+case class EthLogEvent(blockNumber: BigInt, transactionHash: String, logIndex: Long, event: TypedEvent)
 
 trait Web3Service {
   def getCurrentBlockNumber: Task[BigInteger]
-  def getLogs(contractAddress: String, from: BigInteger, to: BigInteger): Task[List[LogEvent]]
+  def getLogs(contractAddress: String, from: BigInteger, to: BigInteger): Task[List[EthLogEvent]]
   def streamBlocks: ZStream[Any, Throwable, EthBlock]
 }
 
@@ -30,7 +30,7 @@ case class Web3ServiceImpl(web3j: Web3j) extends Web3Service {
   override def getCurrentBlockNumber: Task[BigInteger] =
     ZIO.attempt(web3j.ethBlockNumber.send.getBlockNumber)
 
-  override def getLogs(contractAddress: String, from: BigInteger, to: BigInteger): Task[List[LogEvent]] =
+  override def getLogs(contractAddress: String, from: BigInteger, to: BigInteger): Task[List[EthLogEvent]] =
     println(s"getting logs: ${from.longValueExact()} -> ${to.longValueExact()}")
     ZIO.attempt {
       val filter = new org.web3j.protocol.core.methods.request.EthFilter(
@@ -44,7 +44,7 @@ case class Web3ServiceImpl(web3j: Web3j) extends Web3Service {
 
       logs.map { log =>
         val logObject = log.asInstanceOf[EthLog.LogObject]
-        LogEvent(
+        EthLogEvent(
           BigInt.javaBigInteger2bigInt(logObject.getBlockNumber),
           logObject.getTransactionHash,
           logObject.getLogIndex.longValueExact,
@@ -64,7 +64,7 @@ object Web3Service {
   def getBlockNumber: ZIO[Web3Service, Throwable, BigInteger] =
     ZIO.serviceWithZIO[Web3Service](_.getCurrentBlockNumber)
 
-  def getLogs(contractAddress: String, from: BigInteger, to: BigInteger): ZIO[Web3Service, Throwable, List[LogEvent]] =
+  def getLogs(contractAddress: String, from: BigInteger, to: BigInteger): ZIO[Web3Service, Throwable, List[EthLogEvent]] =
     ZIO.serviceWithZIO[Web3Service](_.getLogs(contractAddress, from, to))
 
   val live: ZLayer[AppConfig, Nothing, Web3Service] =

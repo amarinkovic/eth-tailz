@@ -1,6 +1,6 @@
 scalaVersion := "3.2.0"
 
-name := "eth_log_streamer"
+name := "eth-tailz"
 
 libraryDependencies ++= Seq(
   "dev.zio" %% "zio" % "2.0.0",
