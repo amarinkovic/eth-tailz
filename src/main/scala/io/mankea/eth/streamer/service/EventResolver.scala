@@ -10,31 +10,58 @@ import org.web3j.protocol.http.HttpService
 import java.math.BigInteger
 import scala.jdk.CollectionConverters.*
 
-class EventResolver {
+type EventType = Event
+
+trait TypedEvent
+
+case class RoleUpdated(objectId: String, contextId: String, roleId: String, funcName: String) extends TypedEvent
+
+object RoleUpdated {
+  def apply(event: EventType): RoleUpdated =
+    RoleUpdated(
+      objectId = event.getParameters.get(0).getType.asInstanceOf[Bytes32].getValue.toString(),
+      contextId = event.getParameters.get(1).getType.asInstanceOf[Bytes32].getValue.toString(),
+      roleId = event.getParameters.get(2).getType.asInstanceOf[Bytes32].getValue.toString(),
+      funcName = event.getParameters.get(3).getType.asInstanceOf[Utf8String].getValue
+    )
+}
+
+object EventResolver {
 
   // event InitializeDiamond(address sender)
   // event RoleCanAssignUpdated(string role, string group)
   // event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)
 
-  private val events: Map[String, Event] = List(
-    new Event("InitializeDiamond", List(
-      new TypeReference[Address](false) {}
+  private val evenTypes: Map[String, EventType] = List(
+    new EventType("RoleUpdated", List(
+      new TypeReference[Bytes32](true) {},    //  objectId
+      new TypeReference[Bytes32](false) {},   //  contextId
+      new TypeReference[Bytes32](false) {},   //  roleId
+      new TypeReference[Utf8String](false) {} //  functionName
     ).asJava),
 
-    new Event("RoleCanAssignUpdated", List(
-      new TypeReference[Utf8String](false) {},
-      new TypeReference[Utf8String](false) {}
+    new EventType("RoleCanAssignUpdated", List(
+      new TypeReference[Utf8String](false) {},  // role
+      new TypeReference[Utf8String](false) {}   // group
     ).asJava),
 
-    new Event("OwnershipTransferred", List(
-      new TypeReference[Address](true) {},
-      new TypeReference[Address](true) {}
+    new EventType("InitializeDiamond", List(
+      new TypeReference[Address](false) {}    // sender
+    ).asJava),
+
+    new EventType("OwnershipTransferred", List(
+      new TypeReference[Address](true) {},    // previous owner
+      new TypeReference[Address](true) {}     // new owner
     ).asJava)
+
   ).map { event =>
     (EventEncoder.encode(event), event)
   }.toMap
 
-  def getName(topic: String): String = events.get(topic).map(_.getName).getOrElse(topic)
+  def getName(topic: String): String = evenTypes.get(topic).map(_.getName).getOrElse(topic)
+
+  def getType(name: String): Option[EventType] = evenTypes.get(name)
+
 }
 
 //  TODO

@@ -23,20 +23,19 @@ object App extends ZIOAppDefault {
   val pollingInterval = 3.seconds
   val from = BigInteger.valueOf(3276471)
 
-  def logStream(contractAddress: String, fromBlock: BigInteger): ZStream[Web3Service, Throwable, LogEvent] = {
+  def logStream(contractAddress: String, from: BigInteger): ZStream[Web3Service, Throwable, LogEvent] = {
     ZStream.unwrap {
       for {
         web3 <- ZIO.service[Web3Service]
         currentBlock <- web3.getCurrentBlockNumber
-//        to <- ZIO.succeed(currentBlock.min(from.add(BigInteger.valueOf(1000))))
-        logs <- web3.getLogs(contractAddress, BigInteger.valueOf(3276471), BigInteger.valueOf(3277471))
-      } yield ZStream.fromIterable(logs)
+        to <- ZIO.succeed(currentBlock.min(from.add(BigInteger.valueOf(1000))))
+        logs <- web3.getLogs(contractAddress, from, to)
+      } yield ZStream.fromIterable(logs) // .repeat(Schedule.spaced(pollingInterval))
     }
   }
 
   val stream = logStream(contractAddress, from)
   private val toStringPipe = ZPipeline.map[LogEvent, String](l => s"block: ${l.blockNumber} | tx: ${l.transactionHash} | ${l.logIndex} |  ${l.event}")
-
 
   def run = stream.via(toStringPipe)
     .tap(l => Console.printLine(l))

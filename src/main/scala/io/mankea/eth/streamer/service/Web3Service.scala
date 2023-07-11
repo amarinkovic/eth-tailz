@@ -26,7 +26,7 @@ trait Web3Service {
 
 case class Web3ServiceImpl(web3j: Web3j) extends Web3Service {
 
-  private val eventResolver = EventResolver()
+  private val eventResolver = EventResolver
 
   override def getCurrentBlockNumber: Task[BigInteger] =
     ZIO.attempt(web3j.ethBlockNumber.send.getBlockNumber)
