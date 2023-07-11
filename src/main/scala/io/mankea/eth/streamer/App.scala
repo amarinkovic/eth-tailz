@@ -28,7 +28,7 @@ object App extends ZIOAppDefault {
       for {
         web3 <- ZIO.service[Web3Service]
         currentBlock <- web3.getCurrentBlockNumber
-        to <- ZIO.succeed(currentBlock.min(from.add(BigInteger.valueOf(1000))))
+        to <- ZIO.succeed(currentBlock.min(from.add(BigInteger.valueOf(390000))))
         logs <- web3.getLogs(contractAddress, from, to)
       } yield ZStream.fromIterable(logs) // .repeat(Schedule.spaced(pollingInterval))
     }

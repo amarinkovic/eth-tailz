@@ -20,7 +20,6 @@ case class LogEvent(blockNumber: BigInt, transactionHash: String, logIndex: Long
 trait Web3Service {
   def getCurrentBlockNumber: Task[BigInteger]
   def getLogs(contractAddress: String, from: BigInteger, to: BigInteger): Task[List[LogEvent]]
-  def streamLogs(contractAddress: String, from: Long): ZStream[Any, Throwable, LogEvent]
   def streamBlocks: ZStream[Any, Throwable, EthBlock]
 }
 
@@ -53,16 +52,6 @@ case class Web3ServiceImpl(web3j: Web3j) extends Web3Service {
         )
       }
     }
-
-  override def streamLogs(contractAddress: String, from: Long): ZStream[Any, Throwable, LogEvent] =
-    ZStream.unwrap {
-      for {
-        currentBlock <- getCurrentBlockNumber
-        to <- ZIO.succeed(currentBlock.min(BigInteger.valueOf(from + 1000)))
-        logs <- getLogs(contractAddress, BigInteger.valueOf(from), to)
-      } yield ZStream.fromIterable(logs)
-    }
-  //.repeat(Schedule.spaced(interval))
 
   override def streamBlocks: ZStream[Any, Throwable, EthBlock] =
     val from = DefaultBlockParameter.valueOf(BigInteger.valueOf(8737849))
