@@ -21,14 +21,17 @@ object App extends ZIOAppDefault {
   private val pollingInterval = 3.seconds
   private val from = 3276471
 
-  private def logStream(contractAddress: String, from: BigInt): ZStream[Web3Service, Throwable, EthLogEvent] = {
+  private def logStream(contractAddress: String, initialFrom: BigInt): ZStream[Web3Service, Throwable, EthLogEvent] = {
     ZStream.unwrap {
-      for {
-        web3 <- ZIO.service[Web3Service]
-        currentBlock <- web3.getCurrentBlockNumber
-        to <- ZIO.succeed(currentBlock.min(from + 390000))
-        logs <- web3.getLogs(contractAddress, from, to)
-      } yield ZStream.fromIterable(logs)
+      ZStream.fromZIO(ZIO.service[Web3Service]).flatMap { web3 =>
+        ZStream.unfoldChunkZIO(initialFrom) { from =>
+          for {
+            currentBlock <- web3.getCurrentBlockNumber
+            to <- ZIO.succeed(currentBlock.min(from + 1000))
+            logs <- web3.getLogs(contractAddress, from, to)
+          } yield Some((Chunk.fromIterable(logs), to + 1))
+        }
+      }.flattenChunks
     }
   }
 
