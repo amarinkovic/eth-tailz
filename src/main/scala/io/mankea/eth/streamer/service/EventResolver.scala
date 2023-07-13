@@ -16,11 +16,12 @@ import scala.jdk.CollectionConverters.*
 type Web3jEventType = Event
 
 trait TypedEvent
-case class Unsupported(topic: String) extends TypedEvent
-case class RoleUpdated(objectId: String, contextId: String, roleId: String, funcName: String) extends TypedEvent
-case class RoleCanAssignUpdated(role: String, group: String) extends TypedEvent
-case class OwnershipTransferred(previousOwner: String, newOwner: String) extends TypedEvent
+
 case class InitializeDiamond(sender: String) extends TypedEvent
+case class OwnershipTransferred(previousOwner: String, newOwner: String) extends TypedEvent
+case class RoleCanAssignUpdated(role: String, group: String) extends TypedEvent
+case class RoleUpdated(objectId: String, contextId: String, roleId: String, funcName: String) extends TypedEvent
+case class Unsupported(topic: String) extends TypedEvent
 
 object EventResolver {
 
