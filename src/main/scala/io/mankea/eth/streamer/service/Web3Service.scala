@@ -8,12 +8,12 @@ import org.web3j.protocol.core.methods.request.EthFilter
 import org.web3j.protocol.core.methods.response.{EthBlock, EthLog}
 import org.web3j.protocol.core.methods.response.EthLog
 import org.web3j.protocol.http.HttpService
-import zio.*
+import zio._
 import zio.stream.ZStream
 import io.mankea.eth.streamer.service._
 
 import java.math.BigInteger
-import scala.jdk.CollectionConverters.*
+import scala.jdk.CollectionConverters._
 
 case class EthLogEvent(blockNumber: BigInt, transactionHash: String, logIndex: Long, event: TypedEvent)
 

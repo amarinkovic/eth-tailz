@@ -11,7 +11,7 @@ import org.web3j.utils.Numeric
 
 import java.math.BigInteger
 import java.nio.charset.StandardCharsets
-import scala.jdk.CollectionConverters.*
+import scala.jdk.CollectionConverters._
 
 type Web3jEventType = Event
 

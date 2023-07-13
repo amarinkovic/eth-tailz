@@ -1,7 +1,7 @@
 package io.mankea.eth.streamer;
 
 import io.mankea.eth.streamer.config.AppConfig
-import io.mankea.eth.streamer.service.{EthLogEvent, *}
+import io.mankea.eth.streamer.service._
 import org.web3j.abi.FunctionReturnDecoder
 import org.web3j.abi.datatypes.Address
 import org.web3j.protocol.Web3j
@@ -9,13 +9,11 @@ import org.web3j.protocol.core.methods.request.EthFilter
 import org.web3j.protocol.core.methods.response.EthLog.LogObject
 import org.web3j.protocol.core.methods.response.{EthBlock, EthLog}
 import org.web3j.protocol.core.{DefaultBlockParameter, DefaultBlockParameterName, DefaultBlockParameterNumber}
-import zio.Console.*
-import zio.Duration.*
-import zio.stream.*
-import zio.{Task, *}
+import zio._
+import zio.stream._
 
 import java.math.BigInteger
-import scala.jdk.CollectionConverters.*
+import scala.jdk.CollectionConverters._
 
 object App extends ZIOAppDefault {
 
