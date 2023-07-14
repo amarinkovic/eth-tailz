@@ -39,7 +39,7 @@ case class Web3ServiceImpl(web3j: Web3j) extends Web3Service {
       )
 
       val logs = web3j.ethGetLogs(filter).send().getLogs.asScala.toList
-      println(s"Blocks: ${from} -> ${to} | Got ${logs.size} events")
+      println(s"#${from} -> #${to} | Got ${logs.size} events total")
 
       logs.map { log =>
         val logObject = log.asInstanceOf[EthLog.LogObject]

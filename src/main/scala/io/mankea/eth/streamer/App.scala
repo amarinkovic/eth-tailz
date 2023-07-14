@@ -40,7 +40,7 @@ object App extends ZIOAppDefault {
   }
 
   private val stream = logStream(contractAddress, from)
-  private val pipeToString = ZPipeline.map[EthLogEvent, String](l => s"block: ${l.blockNumber} | tx: ${l.transactionHash} | ${l.logIndex} | ${l.event}")
+  private val pipeToString = ZPipeline.map[EthLogEvent, String](l => s"#${l.blockNumber} ${l.transactionHash} | ${l.logIndex} | ${l.event}")
 
   private def onlySupported: EthLogEvent => Boolean = {
     case EthLogEvent(_, _, _, Unsupported(_)) => false
