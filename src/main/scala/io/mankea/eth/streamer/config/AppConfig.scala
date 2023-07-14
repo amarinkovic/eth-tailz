@@ -10,7 +10,7 @@ import zio.config.typesafe.TypesafeConfigSource
 case class AppConfig(host: String, port: Int, contractAddress: String, nodeUrl: String)
 
 object AppConfig {
-  val layer: ZLayer[Any, ReadError[String], AppConfig] =
+  val live: ZLayer[Any, ReadError[String], AppConfig] =
     ZLayer {
       read {
         descriptor[AppConfig].from(

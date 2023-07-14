@@ -50,7 +50,7 @@ object App extends ZIOAppDefault {
     .foreach(Console.printLine(_))
     .provide(
       Web3Service.live,
-      AppConfig.layer
+      AppConfig.live
     )
 
 }

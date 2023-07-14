@@ -14,7 +14,7 @@ import scala.jdk.CollectionConverters._
 
 type Web3jEventType = Event
 
-trait TypedEvent
+sealed trait TypedEvent
 
 case class InitializeDiamond(sender: String) extends TypedEvent
 case class OwnershipTransferred(previousOwner: String, newOwner: String) extends TypedEvent
