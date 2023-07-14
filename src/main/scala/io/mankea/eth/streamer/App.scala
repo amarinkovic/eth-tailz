@@ -19,16 +19,20 @@ object App extends ZIOAppDefault {
 
   private val contractAddress = "0x7E5462DA297440D2a27fE27d1F291Cf67202302B"
   private val pollingInterval = 3.seconds
-  private val from = 3276471
+  private val chunkSize = 1000
+  private val from = 3276471 // block when it's deployed
 
-  private def logStream(contractAddress: String, from: BigInt): ZStream[Web3Service, Throwable, EthLogEvent] = {
-    ZStream.unwrap {
-      for {
-        web3 <- ZIO.service[Web3Service]
-        currentBlock <- web3.getCurrentBlockNumber
-        to <- ZIO.succeed(currentBlock.min(from + 390000))
-        logs <- web3.getLogs(contractAddress, from, to)
-      } yield ZStream.fromIterable(logs)
+  private def logStream(contractAddress: String, initialFrom: BigInt): ZStream[Web3Service, Throwable, EthLogEvent] = {
+    ZStream.fromZIO(ZIO.service[Web3Service]).flatMap { web3 =>
+      ZStream.unfoldChunkZIO(initialFrom) { from =>
+        for {
+          currentBlock <- web3.getCurrentBlockNumber
+          to <- ZIO.succeed(currentBlock.min(from + chunkSize))
+          logs <- web3.getLogs(contractAddress, from, to)
+        } yield
+          if (to == currentBlock) None
+          else Some((Chunk.fromIterable(logs), to + 1))
+      }
     }
   }
 

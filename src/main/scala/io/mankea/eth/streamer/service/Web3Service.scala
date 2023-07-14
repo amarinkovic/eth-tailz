@@ -31,7 +31,6 @@ case class Web3ServiceImpl(web3j: Web3j) extends Web3Service {
     ZIO.attempt(web3j.ethBlockNumber.send.getBlockNumber).map(BigInt.javaBigInteger2bigInt)
 
   override def getLogs(contractAddress: String, from: BigInt, to: BigInt): Task[List[EthLogEvent]] =
-    println(s"getting logs: ${from} -> ${to}")
     ZIO.attempt {
       val filter = new org.web3j.protocol.core.methods.request.EthFilter(
         DefaultBlockParameter.valueOf(from.bigInteger),
@@ -40,7 +39,7 @@ case class Web3ServiceImpl(web3j: Web3j) extends Web3Service {
       )
 
       val logs = web3j.ethGetLogs(filter).send().getLogs.asScala.toList
-      println(s"Got ${logs.size} events")
+      println(s"Blocks: ${from} -> ${to} | Got ${logs.size} events")
 
       logs.map { log =>
         val logObject = log.asInstanceOf[EthLog.LogObject]
