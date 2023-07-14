@@ -18,7 +18,7 @@ import scala.jdk.CollectionConverters._
 object App extends ZIOAppDefault {
 
   private val contractAddress = "0x7E5462DA297440D2a27fE27d1F291Cf67202302B"
-  private val pollingInterval = 3.seconds
+  private val pollingDelay = 12.seconds
   private val chunkSize = 1000
   private val from = 3276471 // block when it's deployed
 
@@ -29,9 +29,12 @@ object App extends ZIOAppDefault {
           currentBlock <- web3.getCurrentBlockNumber
           to <- ZIO.succeed(currentBlock.min(from + chunkSize))
           logs <- web3.getLogs(contractAddress, from, to)
+          _ <- if(to == currentBlock) {
+            println(s" >> reached current block, sleeping for ${pollingDelay.getSeconds} seconds")
+            ZIO.sleep(pollingDelay)
+          } else ZIO.unit
         } yield
-          if (to == currentBlock) None
-          else Some((Chunk.fromIterable(logs), to + 1))
+          Some((Chunk.fromIterable(logs), to + 1))
       }
     }
   }
