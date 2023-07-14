@@ -9,7 +9,6 @@ import org.web3j.protocol.core.methods.response.EthLog.LogObject
 import org.web3j.protocol.http.HttpService
 import org.web3j.utils.Numeric
 
-import java.math.BigInteger
 import java.nio.charset.StandardCharsets
 import scala.jdk.CollectionConverters._
 

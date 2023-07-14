@@ -18,8 +18,8 @@ import scala.jdk.CollectionConverters._
 case class EthLogEvent(blockNumber: BigInt, transactionHash: String, logIndex: Long, event: TypedEvent)
 
 trait Web3Service {
-  def getCurrentBlockNumber: Task[BigInteger]
-  def getLogs(contractAddress: String, from: BigInteger, to: BigInteger): Task[List[EthLogEvent]]
+  def getCurrentBlockNumber: Task[BigInt]
+  def getLogs(contractAddress: String, from: BigInt, to: BigInt): Task[List[EthLogEvent]]
   def streamBlocks: ZStream[Any, Throwable, EthBlock]
 }
 
@@ -27,15 +27,15 @@ case class Web3ServiceImpl(web3j: Web3j) extends Web3Service {
 
   private val eventResolver = EventResolver
 
-  override def getCurrentBlockNumber: Task[BigInteger] =
-    ZIO.attempt(web3j.ethBlockNumber.send.getBlockNumber)
+  override def getCurrentBlockNumber: Task[BigInt] =
+    ZIO.attempt(web3j.ethBlockNumber.send.getBlockNumber).map(BigInt.javaBigInteger2bigInt)
 
-  override def getLogs(contractAddress: String, from: BigInteger, to: BigInteger): Task[List[EthLogEvent]] =
-    println(s"getting logs: ${from.longValueExact()} -> ${to.longValueExact()}")
+  override def getLogs(contractAddress: String, from: BigInt, to: BigInt): Task[List[EthLogEvent]] =
+    println(s"getting logs: ${from} -> ${to}")
     ZIO.attempt {
       val filter = new org.web3j.protocol.core.methods.request.EthFilter(
-        DefaultBlockParameter.valueOf(from),
-        DefaultBlockParameter.valueOf(to),
+        DefaultBlockParameter.valueOf(from.bigInteger),
+        DefaultBlockParameter.valueOf(to.bigInteger),
         contractAddress
       )
 
@@ -61,7 +61,7 @@ case class Web3ServiceImpl(web3j: Web3j) extends Web3Service {
 
 object Web3Service {
 
-  def getBlockNumber: ZIO[Web3Service, Throwable, BigInteger] =
+  def getBlockNumber: ZIO[Web3Service, Throwable, BigInt] =
     ZIO.serviceWithZIO[Web3Service](_.getCurrentBlockNumber)
 
   def getLogs(contractAddress: String, from: BigInteger, to: BigInteger): ZIO[Web3Service, Throwable, List[EthLogEvent]] =
