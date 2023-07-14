@@ -20,11 +20,36 @@ case class InitializeDiamond(sender: String) extends TypedEvent
 case class OwnershipTransferred(previousOwner: String, newOwner: String) extends TypedEvent
 case class RoleCanAssignUpdated(role: String, group: String) extends TypedEvent
 case class RoleUpdated(objectId: String, contextId: String, roleId: String, funcName: String) extends TypedEvent
+case class EntityCreated(entityId: String, entityAdmin: String) extends TypedEvent
+case class EntityUpdated(entityId: String) extends TypedEvent
+case class SimplePolicyCreated(id: String, entityId: String) extends TypedEvent
+case class TokenSaleStarted(entityId: String, offerId: Long, tokenSymbol: String, tokenName: String) extends TypedEvent
 case class Unsupported(topic: String) extends TypedEvent
 
 object EventResolver {
 
   private val evenTypes: Map[String, Web3jEventType] = List(
+    new Web3jEventType("TokenSaleStarted", List(
+      new TypeReference[Bytes32](true) {},      //  entityId
+      new TypeReference[Uint256](false) {},     //  offerId
+      new TypeReference[Utf8String](false) {},  //  tokenSymbol
+      new TypeReference[Utf8String](false) {}   //  tokenName
+    ).asJava),
+
+    new Web3jEventType("SimplePolicyCreated", List(
+      new TypeReference[Bytes32](true) {}, //  policyId
+      new TypeReference[Bytes32](false) {} //  entityId
+    ).asJava),
+
+    new Web3jEventType("EntityUpdated", List(
+      new TypeReference[Bytes32](true) {}     //  entityId
+    ).asJava),
+
+    new Web3jEventType("EntityCreated", List(
+      new TypeReference[Bytes32](true) {},    //  entityId
+      new TypeReference[Bytes32](false) {}    //  entityAdmin
+    ).asJava),
+
     new Web3jEventType("RoleUpdated", List(
       new TypeReference[Bytes32](true) {},    //  objectId
       new TypeReference[Bytes32](false) {},   //  contextId
@@ -63,6 +88,27 @@ object EventResolver {
     evenTypes.get(topic).map(t => decode(obj, t)) match {
       case Some(decodedAttrs) => {
         eventName match
+          case "TokenSaleStarted" =>
+            TokenSaleStarted(
+              entityId = Numeric.toHexString(decodedAttrs.asJava.get(0).asInstanceOf[Bytes32].getValue),
+              offerId = decodedAttrs.asJava.get(1).asInstanceOf[Uint256].getValue.longValueExact(),
+              tokenSymbol = decodedAttrs.asJava.get(2).asInstanceOf[Utf8String].getValue,
+              tokenName = decodedAttrs.asJava.get(3).asInstanceOf[Utf8String].getValue
+            )
+          case "SimplePolicyCreated" =>
+            SimplePolicyCreated(
+              id = Numeric.toHexString(decodedAttrs.asJava.get(0).asInstanceOf[Bytes32].getValue),
+              entityId = Numeric.toHexString(decodedAttrs.asJava.get(1).asInstanceOf[Bytes32].getValue)
+            )
+          case "EntityCreated" =>
+            EntityCreated(
+              entityId = Numeric.toHexString(decodedAttrs.asJava.get(0).asInstanceOf[Bytes32].getValue),
+              entityAdmin = Numeric.toHexString(decodedAttrs.asJava.get(1).asInstanceOf[Bytes32].getValue)
+            )
+          case "EntityUpdated" =>
+            EntityUpdated(
+              entityId = Numeric.toHexString(decodedAttrs.asJava.get(0).asInstanceOf[Bytes32].getValue)
+            )
           case "RoleUpdated" =>
             RoleUpdated(
               objectId = Numeric.toHexString(decodedAttrs.asJava.get(0).asInstanceOf[Bytes32].getValue),
