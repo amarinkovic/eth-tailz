@@ -17,7 +17,7 @@ import scala.jdk.CollectionConverters._
 
 case class EthLogEvent(blockNumber: BigInt, transactionHash: String, logIndex: Long, event: TypedEvent)
 
-trait Web3Service {
+sealed trait Web3Service {
   def getCurrentBlockNumber: Task[BigInt]
   def getLogs(contractAddress: String, from: BigInt, to: BigInt): Task[List[EthLogEvent]]
   def streamBlocks: ZStream[Any, Throwable, EthBlock]
@@ -32,24 +32,25 @@ case class Web3ServiceImpl(web3j: Web3j) extends Web3Service {
 
   override def getLogs(contractAddress: String, from: BigInt, to: BigInt): Task[List[EthLogEvent]] =
     ZIO.attempt {
-      val filter = new org.web3j.protocol.core.methods.request.EthFilter(
+      val filter = new EthFilter(
         DefaultBlockParameter.valueOf(from.bigInteger),
         DefaultBlockParameter.valueOf(to.bigInteger),
         contractAddress
       )
 
       val logs = web3j.ethGetLogs(filter).send().getLogs.asScala.toList
-      println(s"#${from} -> #${to} | Got ${logs.size} events total")
+      println(s"#${from} -> #${to} | ${logs.size} events")
 
-      logs.map { log =>
-        val logObject = log.asInstanceOf[EthLog.LogObject]
-        EthLogEvent(
-          BigInt.javaBigInteger2bigInt(logObject.getBlockNumber),
-          logObject.getTransactionHash,
-          logObject.getLogIndex.longValueExact,
-          eventResolver.getTypedEvent(logObject)
-        )
-      }
+      logs
+        .map(_.asInstanceOf[EthLog.LogObject])
+        .map { logObject =>
+          EthLogEvent(
+            BigInt.javaBigInteger2bigInt(logObject.getBlockNumber),
+            logObject.getTransactionHash,
+            logObject.getLogIndex.longValueExact,
+            eventResolver.getTypedEvent(logObject)
+          )
+        }
     }
 
   override def streamBlocks: ZStream[Any, Throwable, EthBlock] =
@@ -60,7 +61,7 @@ case class Web3ServiceImpl(web3j: Web3j) extends Web3Service {
 
 object Web3Service {
 
-  def getBlockNumber: ZIO[Web3Service, Throwable, BigInt] =
+  def getCurrentBlockNumber: ZIO[Web3Service, Throwable, BigInt] =
     ZIO.serviceWithZIO[Web3Service](_.getCurrentBlockNumber)
 
   def getLogs(contractAddress: String, from: BigInteger, to: BigInteger): ZIO[Web3Service, Throwable, List[EthLogEvent]] =
