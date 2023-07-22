@@ -12,8 +12,10 @@ import zio._
 import zio.stream.ZStream
 import io.mankea.eth.streamer.service._
 
+import java.io.IOException
 import java.math.BigInteger
 import scala.jdk.CollectionConverters._
+import java.net.SocketTimeoutException
 
 case class EthLogEvent(blockNumber: BigInt, transactionHash: String, logIndex: Long, event: TypedEvent)
 
@@ -30,8 +32,8 @@ case class Web3ServiceImpl(web3j: Web3j) extends Web3Service {
   override def getCurrentBlockNumber: Task[BigInt] =
     ZIO.attempt(web3j.ethBlockNumber.send.getBlockNumber).map(BigInt.javaBigInteger2bigInt)
 
-  override def getLogs(contractAddress: String, from: BigInt, to: BigInt): Task[List[EthLogEvent]] =
-    ZIO.attempt {
+  override def getLogs(contractAddress: String, from: BigInt, to: BigInt): ZIO[Any, SocketTimeoutException | IOException, List[EthLogEvent]] =
+    ZIO.attemptBlocking {
       val filter = new EthFilter(
         DefaultBlockParameter.valueOf(from.bigInteger),
         DefaultBlockParameter.valueOf(to.bigInteger),
@@ -51,7 +53,8 @@ case class Web3ServiceImpl(web3j: Web3j) extends Web3Service {
             eventResolver.getTypedEvent(logObject)
           )
         }
-    }
+    }.retryN(5)
+      .orDie
 
   override def streamBlocks: ZStream[Any, Throwable, EthBlock] =
     val from = DefaultBlockParameter.valueOf(BigInteger.valueOf(8737849))

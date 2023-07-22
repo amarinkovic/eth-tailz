@@ -1,7 +1,6 @@
 package io.mankea.eth.streamer.config
 
 import zio._
-import zhttp.http._
 
 import zio.config._
 import zio.config.magnolia.descriptor
