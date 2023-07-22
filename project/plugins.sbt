@@ -1,0 +1,1 @@
+addSbtPlugin("zio.cli.sbt" % "sbt-zio-cli" % "0.0.0-SNAPSHOT")
