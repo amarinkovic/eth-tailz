@@ -22,7 +22,6 @@ case class EthLogEvent(blockNumber: BigInt, transactionHash: String, logIndex: L
 sealed trait Web3Service {
   def getCurrentBlockNumber: Task[BigInt]
   def getLogs(contractAddress: String, from: BigInt, to: BigInt): Task[List[EthLogEvent]]
-  def streamBlocks: ZStream[Any, Throwable, EthBlock]
 }
 
 case class Web3ServiceImpl(web3j: Web3j) extends Web3Service {
@@ -55,11 +54,6 @@ case class Web3ServiceImpl(web3j: Web3j) extends Web3Service {
         }
     }.retryN(5)
       .orDie
-
-  override def streamBlocks: ZStream[Any, Throwable, EthBlock] =
-    val from = DefaultBlockParameter.valueOf(BigInteger.valueOf(8737849))
-    ZStream.fromIterable[EthBlock](web3j.replayPastAndFutureBlocksFlowable(from, true).blockingIterable().asScala)
-
 }
 
 object Web3Service {
