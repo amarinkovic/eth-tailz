@@ -32,13 +32,13 @@ case class Web3ServiceImpl(web3j: Web3j) extends Web3Service {
     ZIO.attempt(web3j.ethBlockNumber.send.getBlockNumber).map(BigInt.javaBigInteger2bigInt)
 
   override def getLogs(contractAddress: String, from: BigInt, to: BigInt): ZIO[Any, SocketTimeoutException | IOException, List[EthLogEvent]] =
-    ZIO.attemptBlocking {
-      val filter = new EthFilter(
-        DefaultBlockParameter.valueOf(from.bigInteger),
-        DefaultBlockParameter.valueOf(to.bigInteger),
-        contractAddress
-      )
+    val filter = new EthFilter(
+      DefaultBlockParameter.valueOf(from.bigInteger),
+      DefaultBlockParameter.valueOf(to.bigInteger),
+      contractAddress
+    )
 
+    ZIO.attemptBlocking {
       val logs = web3j.ethGetLogs(filter).send().getLogs.asScala.toList
       println(s"#${from} -> #${to} | ${logs.size} events")
 
@@ -52,8 +52,7 @@ case class Web3ServiceImpl(web3j: Web3j) extends Web3Service {
             eventResolver.getTypedEvent(logObject)
           )
         }
-    }.retryN(5)
-      .orDie
+    }.retryN(4).orDie
 }
 
 object Web3Service {
