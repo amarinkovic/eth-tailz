@@ -1,0 +1,506 @@
+[
+{
+  "name":"[B"
+},
+{
+  "name":"[Ljava.lang.String;"
+},
+{
+  "name":"[Lsun.security.pkcs.SignerInfo;"
+},
+{
+  "name":"[Lzio.ZIO$EvaluationStep;"
+},
+{
+  "name":"apple.security.AppleProvider",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"com.fasterxml.jackson.databind.ext.Java7HandlersImpl",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"com.fasterxml.jackson.databind.ext.Java7SupportImpl",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"com.sun.crypto.provider.AESCipher$General",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"com.sun.crypto.provider.ARCFOURCipher",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"com.sun.crypto.provider.ChaCha20Cipher$ChaCha20Poly1305",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"com.sun.crypto.provider.DESCipher",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"com.sun.crypto.provider.DESedeCipher",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"com.sun.crypto.provider.DHParameters",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"com.sun.crypto.provider.GaloisCounterMode$AESGCM",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"com.sun.crypto.provider.TlsKeyMaterialGenerator",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"com.sun.crypto.provider.TlsMasterSecretGenerator",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"com.sun.crypto.provider.TlsPrfGenerator$V12",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"izumi.reflect.internal.fundamentals.platform.console.TrivialLogger$Config$",
+  "fields":[{"name":"0bitmap$1"}]
+},
+{
+  "name":"izumi.reflect.macrortti.LightTypeTag",
+  "fields":[{"name":"0bitmap$1"}]
+},
+{
+  "name":"izumi.reflect.macrortti.LightTypeTag$ParsedLightTypeTag230Plus",
+  "fields":[{"name":"0bitmap$3"}]
+},
+{
+  "name":"izumi.reflect.macrortti.LightTypeTagInheritance",
+  "fields":[{"name":"0bitmap$1"}]
+},
+{
+  "name":"izumi.reflect.macrortti.LightTypeTagRef$NameReference",
+  "fields":[{"name":"0bitmap$5"}]
+},
+{
+  "name":"java.lang.ClassValue"
+},
+{
+  "name":"java.lang.String"
+},
+{
+  "name":"java.lang.Thread",
+  "fields":[{"name":"threadLocalRandomProbe"}]
+},
+{
+  "name":"java.lang.invoke.VarHandle",
+  "methods":[{"name":"releaseFence","parameterTypes":[] }]
+},
+{
+  "name":"java.security.AlgorithmParametersSpi"
+},
+{
+  "name":"java.security.KeyStoreSpi"
+},
+{
+  "name":"java.security.MessageDigestSpi"
+},
+{
+  "name":"java.security.SecureRandomParameters"
+},
+{
+  "name":"java.security.interfaces.DSAPrivateKey"
+},
+{
+  "name":"java.security.interfaces.DSAPublicKey"
+},
+{
+  "name":"java.security.interfaces.ECPrivateKey"
+},
+{
+  "name":"java.security.interfaces.ECPublicKey"
+},
+{
+  "name":"java.security.interfaces.RSAPrivateKey"
+},
+{
+  "name":"java.security.interfaces.RSAPublicKey"
+},
+{
+  "name":"java.security.spec.DSAParameterSpec"
+},
+{
+  "name":"java.util.Date"
+},
+{
+  "name":"java.util.concurrent.atomic.AtomicBoolean",
+  "fields":[{"name":"value"}]
+},
+{
+  "name":"java.util.concurrent.atomic.AtomicReference",
+  "fields":[{"name":"value"}]
+},
+{
+  "name":"java.util.concurrent.atomic.Striped64",
+  "fields":[{"name":"base"}, {"name":"cellsBusy"}]
+},
+{
+  "name":"javax.security.auth.x500.X500Principal",
+  "fields":[{"name":"thisX500Name"}],
+  "methods":[{"name":"<init>","parameterTypes":["sun.security.x509.X500Name"] }]
+},
+{
+  "name":"org.web3j.abi.datatypes.Address"
+},
+{
+  "name":"org.web3j.abi.datatypes.Bool"
+},
+{
+  "name":"org.web3j.abi.datatypes.Uint",
+  "methods":[{"name":"<init>","parameterTypes":["java.math.BigInteger"] }]
+},
+{
+  "name":"org.web3j.abi.datatypes.Utf8String"
+},
+{
+  "name":"org.web3j.abi.datatypes.generated.Bytes32",
+  "methods":[{"name":"<init>","parameterTypes":["byte[]"] }]
+},
+{
+  "name":"org.web3j.abi.datatypes.generated.Uint160",
+  "methods":[{"name":"<init>","parameterTypes":["java.math.BigInteger"] }]
+},
+{
+  "name":"org.web3j.abi.datatypes.generated.Uint256",
+  "methods":[{"name":"<init>","parameterTypes":["java.math.BigInteger"] }]
+},
+{
+  "name":"org.web3j.protocol.core.DefaultBlockParameter",
+  "queryAllDeclaredMethods":true
+},
+{
+  "name":"org.web3j.protocol.core.DefaultBlockParameterNumber",
+  "allDeclaredFields":true,
+  "queryAllDeclaredMethods":true,
+  "queryAllDeclaredConstructors":true,
+  "methods":[{"name":"getValue","parameterTypes":[] }]
+},
+{
+  "name":"org.web3j.protocol.core.Request",
+  "allDeclaredFields":true,
+  "queryAllDeclaredMethods":true,
+  "queryAllDeclaredConstructors":true,
+  "methods":[{"name":"getId","parameterTypes":[] }, {"name":"getJsonrpc","parameterTypes":[] }, {"name":"getMethod","parameterTypes":[] }, {"name":"getParams","parameterTypes":[] }]
+},
+{
+  "name":"org.web3j.protocol.core.Response",
+  "allDeclaredFields":true,
+  "queryAllDeclaredMethods":true,
+  "methods":[{"name":"setId","parameterTypes":["long"] }, {"name":"setJsonrpc","parameterTypes":["java.lang.String"] }, {"name":"setResult","parameterTypes":["java.lang.Object"] }]
+},
+{
+  "name":"org.web3j.protocol.core.Response$Error",
+  "allDeclaredFields":true,
+  "queryAllDeclaredMethods":true,
+  "queryAllDeclaredConstructors":true
+},
+{
+  "name":"org.web3j.protocol.core.methods.request.EthFilter",
+  "allDeclaredFields":true,
+  "queryAllDeclaredMethods":true,
+  "queryAllDeclaredConstructors":true,
+  "methods":[{"name":"getAddress","parameterTypes":[] }, {"name":"getBlockHash","parameterTypes":[] }, {"name":"getFromBlock","parameterTypes":[] }, {"name":"getToBlock","parameterTypes":[] }]
+},
+{
+  "name":"org.web3j.protocol.core.methods.request.Filter",
+  "allDeclaredFields":true,
+  "queryAllDeclaredMethods":true,
+  "methods":[{"name":"getTopics","parameterTypes":[] }]
+},
+{
+  "name":"org.web3j.protocol.core.methods.response.EthBlockNumber",
+  "allDeclaredFields":true,
+  "queryAllDeclaredMethods":true,
+  "queryAllDeclaredConstructors":true,
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"org.web3j.protocol.core.methods.response.EthLog",
+  "allDeclaredFields":true,
+  "queryAllDeclaredMethods":true,
+  "queryAllDeclaredConstructors":true,
+  "methods":[{"name":"<init>","parameterTypes":[] }, {"name":"setResult","parameterTypes":["java.util.List"] }]
+},
+{
+  "name":"org.web3j.protocol.core.methods.response.EthLog$LogObject",
+  "allDeclaredFields":true,
+  "queryAllDeclaredMethods":true,
+  "queryAllDeclaredConstructors":true,
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"org.web3j.protocol.core.methods.response.EthLog$LogResult",
+  "queryAllDeclaredMethods":true
+},
+{
+  "name":"org.web3j.protocol.core.methods.response.EthLog$LogResultDeserialiser",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"org.web3j.protocol.core.methods.response.Log",
+  "allDeclaredFields":true,
+  "queryAllDeclaredMethods":true,
+  "methods":[{"name":"setAddress","parameterTypes":["java.lang.String"] }, {"name":"setBlockHash","parameterTypes":["java.lang.String"] }, {"name":"setBlockNumber","parameterTypes":["java.lang.String"] }, {"name":"setData","parameterTypes":["java.lang.String"] }, {"name":"setLogIndex","parameterTypes":["java.lang.String"] }, {"name":"setRemoved","parameterTypes":["boolean"] }, {"name":"setTopics","parameterTypes":["java.util.List"] }, {"name":"setTransactionHash","parameterTypes":["java.lang.String"] }, {"name":"setTransactionIndex","parameterTypes":["java.lang.String"] }]
+},
+{
+  "name":"org.web3j.protocol.deserializer.KeepAsJsonDeserialzier",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.misc.Unsafe",
+  "allDeclaredFields":true
+},
+{
+  "name":"sun.security.pkcs12.PKCS12KeyStore",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.security.pkcs12.PKCS12KeyStore$DualFormatPKCS12",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.security.provider.DSA$SHA1withDSA",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.security.provider.DSA$SHA224withDSA",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.security.provider.DSA$SHA256withDSA",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.security.provider.DSAKeyFactory",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.security.provider.DSAParameters",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.security.provider.JavaKeyStore$JKS",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.security.provider.NativePRNG",
+  "methods":[{"name":"<init>","parameterTypes":[] }, {"name":"<init>","parameterTypes":["java.security.SecureRandomParameters"] }]
+},
+{
+  "name":"sun.security.provider.SHA",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.security.provider.SHA2$SHA224",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.security.provider.SHA2$SHA256",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.security.provider.SHA5$SHA384",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.security.provider.SHA5$SHA512",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.security.provider.X509Factory",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.security.provider.certpath.PKIXCertPathValidator",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.security.rsa.PSSParameters",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.security.rsa.RSAKeyFactory$Legacy",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.security.rsa.RSAPSSSignature",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.security.rsa.RSASignature$SHA1withRSA",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.security.rsa.RSASignature$SHA224withRSA",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.security.rsa.RSASignature$SHA256withRSA",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.security.ssl.SSLContextImpl$TLSContext",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.security.ssl.TrustManagerFactoryImpl$PKIXFactory",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"sun.security.util.ObjectIdentifier"
+},
+{
+  "name":"sun.security.x509.AuthorityInfoAccessExtension",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
+},
+{
+  "name":"sun.security.x509.AuthorityKeyIdentifierExtension",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
+},
+{
+  "name":"sun.security.x509.BasicConstraintsExtension",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
+},
+{
+  "name":"sun.security.x509.CRLDistributionPointsExtension",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
+},
+{
+  "name":"sun.security.x509.CertificateExtensions"
+},
+{
+  "name":"sun.security.x509.CertificatePoliciesExtension",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
+},
+{
+  "name":"sun.security.x509.ExtendedKeyUsageExtension",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
+},
+{
+  "name":"sun.security.x509.IssuerAlternativeNameExtension",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
+},
+{
+  "name":"sun.security.x509.KeyUsageExtension",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
+},
+{
+  "name":"sun.security.x509.NetscapeCertTypeExtension",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
+},
+{
+  "name":"sun.security.x509.PrivateKeyUsageExtension",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
+},
+{
+  "name":"sun.security.x509.SubjectAlternativeNameExtension",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
+},
+{
+  "name":"sun.security.x509.SubjectKeyIdentifierExtension",
+  "methods":[{"name":"<init>","parameterTypes":["java.lang.Boolean","java.lang.Object"] }]
+},
+{
+  "name":"zio.Chunk$",
+  "fields":[{"name":"0bitmap$1"}]
+},
+{
+  "name":"zio.ConfigProvider$",
+  "fields":[{"name":"0bitmap$1"}]
+},
+{
+  "name":"zio.Executor",
+  "fields":[{"name":"0bitmap$1"}]
+},
+{
+  "name":"zio.Ref$Atomic",
+  "fields":[{"name":"0bitmap$1"}]
+},
+{
+  "name":"zio.System$",
+  "fields":[{"name":"0bitmap$1"}]
+},
+{
+  "name":"zio.ZEnvironment$",
+  "fields":[{"name":"0bitmap$1"}]
+},
+{
+  "name":"zio.ZIO$",
+  "fields":[{"name":"0bitmap$1"}]
+},
+{
+  "name":"zio.ZLayer",
+  "fields":[{"name":"0bitmap$1"}]
+},
+{
+  "name":"zio.config.ConfigDescriptorModule$ConfigDescriptorAdt$",
+  "fields":[{"name":"0bitmap$1"}]
+},
+{
+  "name":"zio.config.ConfigDescriptorModule$ConfigDescriptorAdt$Describe",
+  "fields":[{"name":"0bitmap$4"}]
+},
+{
+  "name":"zio.config.ConfigDescriptorModule$ConfigDescriptorAdt$Lazy",
+  "fields":[{"name":"0bitmap$6"}]
+},
+{
+  "name":"zio.config.ConfigDescriptorModule$ConfigDescriptorAdt$Nested",
+  "fields":[{"name":"0bitmap$7"}]
+},
+{
+  "name":"zio.config.ConfigDescriptorModule$ConfigDescriptorAdt$Source",
+  "fields":[{"name":"0bitmap$12"}]
+},
+{
+  "name":"zio.config.ConfigDescriptorModule$ConfigDescriptorAdt$TransformOrFail",
+  "fields":[{"name":"0bitmap$14"}]
+},
+{
+  "name":"zio.config.ConfigDescriptorModule$ConfigDescriptorAdt$Zip",
+  "fields":[{"name":"0bitmap$13"}]
+},
+{
+  "name":"zio.config.PropertyType$",
+  "fields":[{"name":"0bitmap$1"}]
+},
+{
+  "name":"zio.config.magnolia.Descriptor$",
+  "fields":[{"name":"0bitmap$1"}]
+},
+{
+  "name":"zio.config.package$",
+  "fields":[{"name":"0bitmap$1"}]
+},
+{
+  "name":"zio.internal.FiberRuntime",
+  "fields":[{"name":"0bitmap$1"}]
+},
+{
+  "name":"zio.internal.HeadPadding",
+  "fields":[{"name":"headCounter"}]
+},
+{
+  "name":"zio.internal.TailPadding",
+  "fields":[{"name":"tailCounter"}]
+},
+{
+  "name":"zio.package$",
+  "fields":[{"name":"0bitmap$1"}]
+},
+{
+  "name":"zio.stream.ZStream$",
+  "fields":[{"name":"0bitmap$2"}]
+}
+]

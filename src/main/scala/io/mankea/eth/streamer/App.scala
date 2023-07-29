@@ -1,4 +1,4 @@
-package io.mankea.eth.streamer;
+package io.mankea.eth.streamer
 
 import io.mankea.eth.streamer.config.AppConfig
 import io.mankea.eth.streamer.service._
