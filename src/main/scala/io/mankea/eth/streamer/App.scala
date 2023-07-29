@@ -1,7 +1,7 @@
 package io.mankea.eth.streamer;
 
 import io.mankea.eth.streamer.config.AppConfig
-import io.mankea.eth.streamer.service._
+import io.mankea.eth.streamer.service.{EthLogEvent, EventResolver, EventResolverImpl, TypedEvent, Unsupported, Web3Service, Web3ServiceImpl}
 import org.web3j.abi.FunctionReturnDecoder
 import org.web3j.abi.datatypes.Address
 import org.web3j.protocol.Web3j
@@ -9,11 +9,11 @@ import org.web3j.protocol.core.methods.request.EthFilter
 import org.web3j.protocol.core.methods.response.EthLog.LogObject
 import org.web3j.protocol.core.methods.response.{EthBlock, EthLog}
 import org.web3j.protocol.core.{DefaultBlockParameter, DefaultBlockParameterName, DefaultBlockParameterNumber}
-import zio._
-import zio.stream._
+import zio.*
+import zio.stream.*
 
 import java.math.BigInteger
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 
 object App extends ZIOAppDefault {
 
@@ -22,7 +22,7 @@ object App extends ZIOAppDefault {
   private val chunkSize = 10000
   private val from = 3276471 // block when it's deployed
 
-  private def logStream(contractAddress: String, initialFrom: BigInt): ZStream[Web3Service, Throwable, EthLogEvent] = {
+  private def logStream(contractAddress: String, initialFrom: BigInt): ZStream[Web3Service with EventResolver, Throwable, EthLogEvent] = {
     ZStream.fromZIO(ZIO.service[Web3Service]).flatMap { web3 =>
       ZStream.unfoldChunkZIO(initialFrom) { from =>
         for {
@@ -52,7 +52,8 @@ object App extends ZIOAppDefault {
     .via(pipeToString)
     .foreach(Console.printLine(_))
     .provide(
-      Web3Service.live,
+      Web3ServiceImpl.live,
+      EventResolverImpl.live,
       AppConfig.live
     )
 
