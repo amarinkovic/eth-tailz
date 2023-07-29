@@ -29,7 +29,7 @@ case class Web3ServiceImpl(web3j: Web3j, eventResolver: EventResolver) extends W
   override def getCurrentBlockNumber: Task[BigInt] =
     ZIO.attempt(web3j.ethBlockNumber.send.getBlockNumber).map(BigInt.javaBigInteger2bigInt)
 
-  override def getLogs(contractAddress: String, from: BigInt, to: BigInt): ZIO[Any, Throwable, List[EthLogEvent]] =
+  override def getLogs(contractAddress: String, from: BigInt, to: BigInt): Task[List[EthLogEvent]] =
     val filter = new EthFilter(
       DefaultBlockParameter.valueOf(from.bigInteger),
       DefaultBlockParameter.valueOf(to.bigInteger),
@@ -50,10 +50,9 @@ case class Web3ServiceImpl(web3j: Web3j, eventResolver: EventResolver) extends W
           typedEvent
         ))
     } yield typedEvents
-
 }
 
-object Web3ServiceImpl {
+object Web3Service {
 
   def getCurrentBlockNumber: ZIO[Web3Service, Throwable, BigInt] =
     ZIO.serviceWithZIO[Web3Service](_.getCurrentBlockNumber)

@@ -30,7 +30,7 @@ object App extends ZIOAppDefault {
           to <- ZIO.succeed(currentBlock.min(from + chunkSize))
           logs <- web3.getLogs(contractAddress, from, to)
           _ <- if (to == currentBlock) {
-            println(s" >> reached current block, sleeping for ${pollingDelay.getSeconds} seconds")
+            println(s"  --  reached latest block, sleeping for ${pollingDelay.getSeconds} seconds")
             ZIO.sleep(pollingDelay)
           } else ZIO.unit
         } yield
@@ -52,8 +52,8 @@ object App extends ZIOAppDefault {
     .via(pipeToString)
     .foreach(Console.printLine(_))
     .provide(
-      Web3ServiceImpl.live,
-      EventResolverImpl.live,
+      Web3Service.live,
+      EventResolver.live,
       AppConfig.live
     )
 

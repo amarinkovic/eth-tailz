@@ -314,7 +314,7 @@ case class EventResolverImpl() extends EventResolver {
   }
 }
 
-object EventResolverImpl {
+object EventResolver {
 
   def getTypedEvent(obj: LogObject): ZIO[EventResolver, Throwable, TypedEvent] =
     ZIO.serviceWithZIO[EventResolver](_.getTypedEvent(obj))
