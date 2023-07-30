@@ -444,6 +444,130 @@
   "fields":[{"name":"0bitmap$1"}]
 },
 {
+  "name":"zio.cli.Args$Both",
+  "fields":[{"name":"0bitmap$3"}]
+},
+{
+  "name":"zio.cli.Args$Empty$",
+  "fields":[{"name":"0bitmap$2"}]
+},
+{
+  "name":"zio.cli.Args$Map",
+  "fields":[{"name":"0bitmap$5"}]
+},
+{
+  "name":"zio.cli.Args$Single",
+  "fields":[{"name":"0bitmap$1"}]
+},
+{
+  "name":"zio.cli.Command$Map",
+  "fields":[{"name":"0bitmap$2"}]
+},
+{
+  "name":"zio.cli.Command$Single",
+  "fields":[{"name":"0bitmap$1"}]
+},
+{
+  "name":"zio.cli.Options$Both",
+  "fields":[{"name":"0bitmap$5"}]
+},
+{
+  "name":"zio.cli.Options$Empty$",
+  "fields":[{"name":"0bitmap$1"}]
+},
+{
+  "name":"zio.cli.Options$Map",
+  "fields":[{"name":"0bitmap$6"}]
+},
+{
+  "name":"zio.cli.Options$Single",
+  "fields":[{"name":"0bitmap$3"}]
+},
+{
+  "name":"zio.cli.Options$WithDefault",
+  "fields":[{"name":"0bitmap$2"}]
+},
+{
+  "name":"zio.cli.PrimType$Bool",
+  "fields":[{"name":"0bitmap$6"}]
+},
+{
+  "name":"zio.cli.PrimType$Bool$",
+  "fields":[{"name":"0bitmap$7"}]
+},
+{
+  "name":"zio.cli.PrimType$Decimal$",
+  "fields":[{"name":"0bitmap$4"}]
+},
+{
+  "name":"zio.cli.PrimType$Enumeration",
+  "fields":[{"name":"0bitmap$2"}]
+},
+{
+  "name":"zio.cli.PrimType$Instant$",
+  "fields":[{"name":"0bitmap$8"}]
+},
+{
+  "name":"zio.cli.PrimType$Integer$",
+  "fields":[{"name":"0bitmap$5"}]
+},
+{
+  "name":"zio.cli.PrimType$LocalDateTime$",
+  "fields":[{"name":"0bitmap$10"}]
+},
+{
+  "name":"zio.cli.PrimType$LocalTime$",
+  "fields":[{"name":"0bitmap$11"}]
+},
+{
+  "name":"zio.cli.PrimType$MonthDay$",
+  "fields":[{"name":"0bitmap$12"}]
+},
+{
+  "name":"zio.cli.PrimType$OffsetDateTime$",
+  "fields":[{"name":"0bitmap$13"}]
+},
+{
+  "name":"zio.cli.PrimType$OffsetTime$",
+  "fields":[{"name":"0bitmap$14"}]
+},
+{
+  "name":"zio.cli.PrimType$Path",
+  "fields":[{"name":"0bitmap$1"}]
+},
+{
+  "name":"zio.cli.PrimType$Period$",
+  "fields":[{"name":"0bitmap$15"}]
+},
+{
+  "name":"zio.cli.PrimType$Text$",
+  "fields":[{"name":"0bitmap$3"}]
+},
+{
+  "name":"zio.cli.PrimType$Year$",
+  "fields":[{"name":"0bitmap$16"}]
+},
+{
+  "name":"zio.cli.PrimType$YearMonth$",
+  "fields":[{"name":"0bitmap$17"}]
+},
+{
+  "name":"zio.cli.PrimType$ZoneId$",
+  "fields":[{"name":"0bitmap$19"}]
+},
+{
+  "name":"zio.cli.PrimType$ZoneOffset$",
+  "fields":[{"name":"0bitmap$20"}]
+},
+{
+  "name":"zio.cli.PrimType$ZonedDateTime$",
+  "fields":[{"name":"0bitmap$18"}]
+},
+{
+  "name":"zio.cli.figlet.FigFont$",
+  "fields":[{"name":"0bitmap$1"}]
+},
+{
   "name":"zio.config.ConfigDescriptorModule$ConfigDescriptorAdt$",
   "fields":[{"name":"0bitmap$1"}]
 },
