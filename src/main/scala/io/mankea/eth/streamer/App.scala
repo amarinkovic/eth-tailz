@@ -21,8 +21,6 @@ import java.nio.file.Path as JPath
 
 object App extends ZIOCliDefault {
 
-  // private val contractAddress = "0x7E5462DA297440D2a27fE27d1F291Cf67202302B"
-  // private val from = 3276471 // block when it's deployed
   private val pollingDelay = 12.seconds
   private val chunkSize = 10000
 
@@ -33,7 +31,12 @@ object App extends ZIOCliDefault {
     case _ => true
   }
 
-  private val mainCmd = Command("eth-tailz", Options.none, Args.text("contractAddress") ++ Args.integer)
+  private val args = Args.text("contractAddress") ++ Args.integer
+
+  private val opt = Options.boolean("forever", true).alias("f")
+    ?? "This option causes tail to not stop when end of blockchain is reached, but rather to wait for additional blocks to be appended"
+
+  private val mainCmd = Command("eth-tailz", opt, args)
     .withHelp(HelpDoc.p("Stream ethereum log events"))
 
   val cliApp = CliApp.make(
@@ -43,8 +46,8 @@ object App extends ZIOCliDefault {
     footer = HelpDoc.p("Let's stream some events!"),
     command = mainCmd
   ) {
-    case (contractAddress, blockNumber) =>
-      logStream(contractAddress, blockNumber)
+    case (forever:Boolean, (contractAddress: String, blockNumber: BigInt)) =>
+      logStream(contractAddress, blockNumber, forever)
         .filter(onlySupported)
         .via(pipeToString)
         .foreach(Console.printLine(_))
@@ -54,19 +57,19 @@ object App extends ZIOCliDefault {
         )
   }
 
-  private def logStream(contractAddress: String, initialFrom: BigInt): ZStream[Web3Service, Throwable, EthLogEvent] = {
+  private def logStream(contractAddress: String, initialFrom: BigInt, forever: Boolean): ZStream[Web3Service, Throwable, EthLogEvent] = {
     ZStream.fromZIO(ZIO.service[Web3Service]).flatMap { web3 =>
       ZStream.unfoldChunkZIO(initialFrom) { from =>
         for {
           currentBlock <- web3.getCurrentBlockNumber
           to <- ZIO.succeed(currentBlock.min(from + chunkSize))
           logs <- web3.getLogs(contractAddress, from, to)
-          _ <- if (to == currentBlock) {
+          _ <- if (to == currentBlock && forever) {
             println(s" >> reached current block, sleeping for ${pollingDelay.getSeconds} seconds")
             ZIO.sleep(pollingDelay)
           } else ZIO.unit
         } yield
-          // if (to == currentBlock) None else  // uncomment to finish at current block
+          if (to == currentBlock && !forever) None else  // uncomment to finish at current block
           Some((Chunk.fromIterable(logs), to + 1))
       }
     }
