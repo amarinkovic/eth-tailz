@@ -21,10 +21,10 @@ import java.nio.file.Path as JPath
 
 object App extends ZIOCliDefault {
 
-  private val contractAddress = "0x7E5462DA297440D2a27fE27d1F291Cf67202302B"
+  // private val contractAddress = "0x7E5462DA297440D2a27fE27d1F291Cf67202302B"
+  // private val from = 3276471 // block when it's deployed
   private val pollingDelay = 12.seconds
   private val chunkSize = 10000
-  private val from = 3276471 // block when it's deployed
 
   private val pipeToString = ZPipeline.map[EthLogEvent, String](l => s"#${l.blockNumber} ${l.transactionHash} | ${l.logIndex} | ${l.event}")
 
@@ -44,7 +44,7 @@ object App extends ZIOCliDefault {
     command = mainCmd
   ) {
     case (contractAddress, blockNumber) =>
-      logStream(contractAddress, from)
+      logStream(contractAddress, blockNumber)
         .filter(onlySupported)
         .via(pipeToString)
         .foreach(Console.printLine(_))
