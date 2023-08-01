@@ -69,7 +69,7 @@ object App extends ZIOCliDefault {
             ZIO.sleep(pollingDelay)
           } else ZIO.unit
         } yield
-          if (to == currentBlock && !forever) None else  // uncomment to finish at current block
+          if (to == currentBlock && !forever) None else  // finish at current block
           Some((Chunk.fromIterable(logs), to + 1))
       }
     }
