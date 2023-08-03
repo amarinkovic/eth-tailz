@@ -21,8 +21,8 @@ import java.nio.file.Path as JPath
 
 object App extends ZIOCliDefault {
 
-  private val pollingDelay = 12.seconds
-  private val chunkSize = 10000
+  private val defaultPollingInterval = 12.seconds
+  private val defaultChunkSize = 10000
 
   private val pipeToString = ZPipeline.map[EthLogEvent, String](l => s"#${l.blockNumber} ${l.transactionHash} | ${l.logIndex} | ${l.event}")
 
@@ -31,12 +31,46 @@ object App extends ZIOCliDefault {
     case _ => true
   }
 
-  private val args = Args.text("contractAddress") ++ Args.integer
+  private def logStream(
+       contractAddress: String,
+       initialFrom: BigInt,
+       forever: Boolean,
+       pollingInterval: Duration,
+       chunkSize: Int
+  ): ZStream[Web3Service, Throwable, EthLogEvent] = {
 
-  private val opt = Options.boolean("forever", true).alias("f")
-    ?? "This option causes tail to not stop when end of blockchain is reached, but rather to wait for additional blocks to be appended"
+    ZStream.fromZIO(ZIO.service[Web3Service]).flatMap { web3Service =>
+      ZStream.unfoldChunkZIO(initialFrom) { from =>
+        for {
+          currentBlock <- web3Service.getCurrentBlockNumber
+          to <- ZIO.succeed(currentBlock.min(from + chunkSize))
+          _ <- if (to == currentBlock && forever) {
+            println(s" >> reached current block, sleeping for ${pollingInterval.getSeconds} seconds")
+            ZIO.sleep(pollingInterval)
+          } else ZIO.unit
+          logs <- web3Service.getLogs(contractAddress, from, to)
+        } yield
+          if (to == currentBlock && !forever) None else // finish at current block
+            Some((Chunk.fromIterable(logs), to + 1))
+      }
+    }
+  }
 
-  private val mainCmd = Command("eth-tailz", opt, args)
+  private val args = Args.text("contractAddress") ++ (Args.integer ?? "Starting block number")
+
+  private val opts =
+    Options.boolean("forever", true).alias("f")
+      ?? "This option causes tail to not stop when end of blockchain is reached, but rather to wait for additional blocks to be appended"
+    ++ Options.integer("polling-interval").alias("i")
+      .map(_.intValue)
+      .map(Duration.fromSeconds(_)).withDefault(defaultPollingInterval)
+      ?? "Interval to poll for new blocks, makes sense with forever(f) option"
+    ++ (Options.integer("chunk-size").alias("c")
+      .map(_.intValue)
+      .withDefault(defaultChunkSize)
+      ?? "Number of blocks to query in one JSON RPC request")
+
+  private val mainCmd = Command("eth-tailz", opts, args)
     .withHelp(HelpDoc.p("Stream ethereum log events"))
 
   val cliApp = CliApp.make(
@@ -46,8 +80,8 @@ object App extends ZIOCliDefault {
     footer = HelpDoc.p("Let's stream some events!"),
     command = mainCmd
   ) {
-    case (forever:Boolean, (contractAddress: String, blockNumber: BigInt)) =>
-      logStream(contractAddress, blockNumber, forever)
+    case ((forever:Boolean, pollingInterval: Duration, chunkSize: Int), (contractAddress: String, blockNumber: BigInt)) =>
+      logStream(contractAddress, blockNumber, forever, pollingInterval, chunkSize)
         .filter(onlySupported)
         .via(pipeToString)
         .foreach(Console.printLine(_))
@@ -56,23 +90,4 @@ object App extends ZIOCliDefault {
           AppConfig.live
         )
   }
-
-  private def logStream(contractAddress: String, initialFrom: BigInt, forever: Boolean): ZStream[Web3Service, Throwable, EthLogEvent] = {
-    ZStream.fromZIO(ZIO.service[Web3Service]).flatMap { web3 =>
-      ZStream.unfoldChunkZIO(initialFrom) { from =>
-        for {
-          currentBlock <- web3.getCurrentBlockNumber
-          to <- ZIO.succeed(currentBlock.min(from + chunkSize))
-          logs <- web3.getLogs(contractAddress, from, to)
-          _ <- if (to == currentBlock && forever) {
-            println(s" >> reached current block, sleeping for ${pollingDelay.getSeconds} seconds")
-            ZIO.sleep(pollingDelay)
-          } else ZIO.unit
-        } yield
-          if (to == currentBlock && !forever) None else  // finish at current block
-          Some((Chunk.fromIterable(logs), to + 1))
-      }
-    }
-  }
-
 }
