@@ -1,6 +1,5 @@
 package io.mankea.eth.streamer
 
-import io.mankea.eth.streamer.config.AppConfig
 import io.mankea.eth.streamer.service.*
 import org.web3j.abi.FunctionReturnDecoder
 import org.web3j.abi.datatypes.Address
@@ -11,6 +10,7 @@ import org.web3j.protocol.core.methods.response.{EthBlock, EthLog}
 import org.web3j.protocol.core.{DefaultBlockParameter, DefaultBlockParameterName, DefaultBlockParameterNumber}
 import zio.*
 import zio.Console.printLine
+import zio.System.SystemLive
 import zio.cli.HelpDoc.Span.text
 import zio.cli.*
 import zio.stream.*
@@ -20,6 +20,8 @@ import scala.jdk.CollectionConverters.*
 import java.nio.file.Path as JPath
 
 object App extends ZIOCliDefault {
+
+  override val bootstrap: ZLayer[Any, Nothing, Unit] = Runtime.setConfigProvider(ConfigProvider.envProvider)
 
   private val defaultPollingInterval = 12.seconds
   private val defaultChunkSize = 10000
@@ -87,8 +89,7 @@ object App extends ZIOCliDefault {
         .via(pipeToString)
         .foreach(Console.printLine(_))
         .provide(
-          Web3Service.live,
-          AppConfig.live
+          Web3Service.live
         )
   }
 }

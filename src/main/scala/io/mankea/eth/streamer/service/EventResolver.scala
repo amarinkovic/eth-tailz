@@ -1,6 +1,5 @@
 package io.mankea.eth.streamer.service
 
-import io.mankea.eth.streamer.config.AppConfig
 import org.web3j.abi.datatypes.generated.{Bytes32, Uint256}
 import org.web3j.abi.datatypes.{Address, Event, Type, Utf8String, Bool}
 import org.web3j.abi.{EventEncoder, FunctionReturnDecoder, TypeReference}
