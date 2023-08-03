@@ -40,7 +40,7 @@ case class Web3ServiceImpl(web3j: Web3j) extends Web3Service {
 
     ZIO.attemptBlocking {
       val logs = web3j.ethGetLogs(filter).send().getLogs.asScala.toList
-      println(s"#${from} -> #${to} | ${logs.size} events")
+      println(s"#$from -> #$to | ${logs.size} events")
 
       logs
         .map(_.asInstanceOf[EthLog.LogObject])

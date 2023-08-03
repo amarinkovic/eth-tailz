@@ -50,8 +50,8 @@ object App extends ZIOCliDefault {
           } else ZIO.unit
           logs <- web3Service.getLogs(contractAddress, from, to)
         } yield
-          if (to == currentBlock && !forever) None else // finish at current block
-            Some((Chunk.fromIterable(logs), to + 1))
+          if (to == currentBlock && !forever) None // finish at current block
+          else Some((Chunk.fromIterable(logs), to + 1))
       }
     }
   }
@@ -63,12 +63,13 @@ object App extends ZIOCliDefault {
       ?? "This option causes tail to not stop when end of blockchain is reached, but rather to wait for additional blocks to be appended"
     ++ Options.integer("polling-interval").alias("i")
       .map(_.intValue)
-      .map(Duration.fromSeconds(_)).withDefault(defaultPollingInterval)
-      ?? "Interval to poll for new blocks, makes sense with forever(f) option"
-    ++ (Options.integer("chunk-size").alias("c")
+      .map(Duration.fromSeconds(_))
+      .withDefault(defaultPollingInterval)
+      ?? "Interval in seconds to poll for new blocks, makes sense with forever(f) option"
+    ++ Options.integer("chunk-size").alias("c")
       .map(_.intValue)
       .withDefault(defaultChunkSize)
-      ?? "Number of blocks to query in one JSON RPC request")
+      ?? "Number of blocks to query in one JSON RPC request"
 
   private val mainCmd = Command("eth-tailz", opts, args)
     .withHelp(HelpDoc.p("Stream ethereum log events"))

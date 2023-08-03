@@ -16,10 +16,10 @@ Native image descriptors are produced by running the app with an agent:
 sbt nativeImageRunAgent
 ```
 
-Binary will be available as `eth-tails` insde the `target` folder. 
+Executable binary `eth-tailz` will be available inside the `target` folder.
 
-Run it by giving it a contract address and a block number from which to start streaming. For example you can run this on Sepolia:
+Run it by giving it a contract address and a block number from which to start streaming. For example, you can run this on Sepolia:
 
 ```zsh
-./eth-tailz --forever 0x7E5462DA297440D2a27fE27d1F291Cf67202302B 3276471
+./eth-tailz --forever --polling-interval 12 --chunk-size 10000 0x7E5462DA297440D2a27fE27d1F291Cf67202302B 3276471
 ```

@@ -297,12 +297,11 @@ object EventResolver {
       val indexedDecoded = (0 until eventType.getIndexedParameters.size())
         .map(x => FunctionReturnDecoder.decodeIndexedValue(logObj.getTopics.get(x + 1), eventType.getIndexedParameters.get(x))).toList
 
-      (indexedDecoded ++ nonIndexedDecoded)
+      indexedDecoded ++ nonIndexedDecoded
     } catch {
-      case e: IndexOutOfBoundsException => {
+      case e: IndexOutOfBoundsException =>
         println(s"`'${eventType.getName}` decoding failed due to: ${e.getMessage}`")
         throw e
-      }
     }
   }
 }
