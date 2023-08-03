@@ -1,7 +1,7 @@
-package io.mankea.eth.streamer;
+package io.mankea.eth.streamer
 
 import io.mankea.eth.streamer.config.AppConfig
-import io.mankea.eth.streamer.service.{EthLogEvent, EventResolver, EventResolverImpl, TypedEvent, Unsupported, Web3Service, Web3ServiceImpl}
+import io.mankea.eth.streamer.service.*
 import org.web3j.abi.FunctionReturnDecoder
 import org.web3j.abi.datatypes.Address
 import org.web3j.protocol.Web3j
@@ -10,51 +10,85 @@ import org.web3j.protocol.core.methods.response.EthLog.LogObject
 import org.web3j.protocol.core.methods.response.{EthBlock, EthLog}
 import org.web3j.protocol.core.{DefaultBlockParameter, DefaultBlockParameterName, DefaultBlockParameterNumber}
 import zio.*
+import zio.Console.printLine
+import zio.cli.*
+import zio.cli.HelpDoc.Span.text
 import zio.stream.*
 
 import java.math.BigInteger
+import java.nio.file.Path as JPath
 import scala.jdk.CollectionConverters.*
 
-object App extends ZIOAppDefault {
+object App extends ZIOCliDefault {
 
-  private val contractAddress = "0x7E5462DA297440D2a27fE27d1F291Cf67202302B"
-  private val pollingDelay = 12.seconds
-  private val chunkSize = 10000
-  private val from = 3276471 // block when it's deployed
+  private val defaultPollingInterval = 12.seconds
+  private val defaultChunkSize = 10000
 
-  private def logStream(contractAddress: String, initialFrom: BigInt): ZStream[Web3Service with EventResolver, Throwable, EthLogEvent] = {
-    ZStream.fromZIO(ZIO.service[Web3Service]).flatMap { web3 =>
-      ZStream.unfoldChunkZIO(initialFrom) { from =>
-        for {
-          currentBlock <- web3.getCurrentBlockNumber
-          to <- ZIO.succeed(currentBlock.min(from + chunkSize))
-          logs <- web3.getLogs(contractAddress, from, to)
-          _ <- if (to == currentBlock) {
-            println(s"  --  reached latest block, sleeping for ${pollingDelay.getSeconds} seconds")
-            ZIO.sleep(pollingDelay)
-          } else ZIO.unit
-        } yield
-          // if (to == currentBlock) None else  // uncomment to finish at current block
-          Some((Chunk.fromIterable(logs), to + 1))
-      }
-    }
-  }
-
-  private val stream = logStream(contractAddress, from)
   private val pipeToString = ZPipeline.map[EthLogEvent, String](l => s"#${l.blockNumber} ${l.transactionHash} | ${l.logIndex} | ${l.event}")
+
   private def onlySupported: EthLogEvent => Boolean = {
     case EthLogEvent(_, _, _, Unsupported(_)) => false
     case _ => true
   }
 
-  def run = stream
-    .filter(onlySupported)
-    .via(pipeToString)
-    .foreach(Console.printLine(_))
-    .provide(
-      Web3Service.live,
-      EventResolver.live,
-      AppConfig.live
-    )
+  private def logStream(
+       contractAddress: String,
+       initialFrom: BigInt,
+       forever: Boolean,
+       pollingInterval: Duration,
+       chunkSize: Int
+  ): ZStream[Web3Service, Throwable, EthLogEvent] = {
 
+    ZStream.fromZIO(ZIO.service[Web3Service]).flatMap { web3Service =>
+      ZStream.unfoldChunkZIO(initialFrom) { from =>
+        for {
+          currentBlock <- web3Service.getCurrentBlockNumber
+          to <- ZIO.succeed(currentBlock.min(from + chunkSize))
+          _ <- if (to == currentBlock && forever) {
+            println(s" >> reached current block, sleeping for ${pollingInterval.getSeconds} seconds")
+            ZIO.sleep(pollingInterval)
+          } else ZIO.unit
+          logs <- web3Service.getLogs(contractAddress, from, to)
+        } yield
+          if (to == currentBlock && !forever) None // finish at current block
+          else Some((Chunk.fromIterable(logs), to + 1))
+      }
+    }
+  }
+
+  private val args = Args.text("contractAddress") ++ (Args.integer ?? "Starting block number")
+
+  private val opts =
+    Options.boolean("forever", true).alias("f")
+      ?? "This option causes tail to not stop when end of blockchain is reached, but rather to wait for additional blocks to be appended"
+    ++ Options.integer("polling-interval").alias("i")
+      .map(_.intValue)
+      .map(Duration.fromSeconds(_))
+      .withDefault(defaultPollingInterval)
+      ?? "Interval in seconds to poll for new blocks, makes sense with forever(f) option"
+    ++ Options.integer("chunk-size").alias("c")
+      .map(_.intValue)
+      .withDefault(defaultChunkSize)
+      ?? "Number of blocks to query in one JSON RPC request"
+
+  private val mainCmd = Command("eth-tailz", opts, args)
+    .withHelp(HelpDoc.p("Stream ethereum log events"))
+
+  val cliApp = CliApp.make(
+    name = "eth-tailz",
+    version = "0.0.1",
+    summary = text("Ethereum Event Log Tail"),
+    footer = HelpDoc.p("Let's stream some events!"),
+    command = mainCmd
+  ) {
+    case ((forever:Boolean, pollingInterval: Duration, chunkSize: Int), (contractAddress: String, blockNumber: BigInt)) =>
+      logStream(contractAddress, blockNumber, forever, pollingInterval, chunkSize)
+        .filter(onlySupported)
+        .via(pipeToString)
+        .foreach(Console.printLine(_))
+        .provide(
+          Web3Service.live,
+          AppConfig.live
+        )
+  }
 }

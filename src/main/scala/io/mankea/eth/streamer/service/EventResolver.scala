@@ -69,7 +69,7 @@ case class EventResolverImpl() extends EventResolver {
     new Web3jEventType("RoleGroupUpdated", List(
       new TypeReference[Utf8String](false) {}, //  role
       new TypeReference[Utf8String](false) {}, //  group
-      new TypeReference[Bool](false) {}        //  roleInGroup
+      new TypeReference[Bool](false) {} //  roleInGroup
     ).asJava),
 
     new Web3jEventType("RoleCanAssignUpdated", List(
@@ -78,25 +78,25 @@ case class EventResolverImpl() extends EventResolver {
     ).asJava),
 
     new Web3jEventType("OrderAdded", List(
-      new TypeReference[Uint256](true) {},  //  orderId
-      new TypeReference[Bytes32](true) {},  //  maker
-      new TypeReference[Bytes32](true) {},  //  sellToken
+      new TypeReference[Uint256](true) {}, //  orderId
+      new TypeReference[Bytes32](true) {}, //  maker
+      new TypeReference[Bytes32](true) {}, //  sellToken
       new TypeReference[Uint256](false) {}, //  sellAmount
       new TypeReference[Uint256](false) {}, //  sellAmountInitial
       new TypeReference[Bytes32](false) {}, //  buyToken
       new TypeReference[Uint256](false) {}, //  buyAmount
       new TypeReference[Uint256](false) {}, //  buyAmountInitial
-      new TypeReference[Uint256](false) {}  //  state
+      new TypeReference[Uint256](false) {} //  state
     ).asJava),
 
     new Web3jEventType("OrderExecuted", List(
-      new TypeReference[Uint256](true) {},  //  orderId
-      new TypeReference[Bytes32](true) {},  //  taker
-      new TypeReference[Bytes32](true) {},  //  sellToken
+      new TypeReference[Uint256](true) {}, //  orderId
+      new TypeReference[Bytes32](true) {}, //  taker
+      new TypeReference[Bytes32](true) {}, //  sellToken
       new TypeReference[Uint256](false) {}, //  sellAmount
-      new TypeReference[Bytes32](false) {},  //  buyToken
+      new TypeReference[Bytes32](false) {}, //  buyToken
       new TypeReference[Uint256](false) {}, //  buyAmount
-      new TypeReference[Uint256](false) {}  //  state
+      new TypeReference[Uint256](false) {} //  state
     ).asJava),
 
     new Web3jEventType("OrderCancelled", List(
@@ -131,25 +131,25 @@ case class EventResolverImpl() extends EventResolver {
     ).asJava),
 
     new Web3jEventType("InternalTokenBalanceUpdate", List(
-      new TypeReference[Bytes32](true) {},      //  ownerId
-      new TypeReference[Bytes32](false) {},     //  tokenId
-      new TypeReference[Uint256](false) {},     //  newAmount
-      new TypeReference[Utf8String](false) {},  //  functionName
-      new TypeReference[Address](false) {}      //  sender
+      new TypeReference[Bytes32](true) {}, //  ownerId
+      new TypeReference[Bytes32](false) {}, //  tokenId
+      new TypeReference[Uint256](false) {}, //  newAmount
+      new TypeReference[Utf8String](false) {}, //  functionName
+      new TypeReference[Address](false) {} //  sender
     ).asJava),
 
     new Web3jEventType("InternalTokenSupplyUpdate", List(
-      new TypeReference[Bytes32](true) {},      //  tokenId
-      new TypeReference[Uint256](false) {},     //  newTokenSupply
-      new TypeReference[Utf8String](false) {},  //  functionName
-      new TypeReference[Address](false) {}      //  sender
+      new TypeReference[Bytes32](true) {}, //  tokenId
+      new TypeReference[Uint256](false) {}, //  newTokenSupply
+      new TypeReference[Utf8String](false) {}, //  functionName
+      new TypeReference[Address](false) {} //  sender
     ).asJava),
 
     new Web3jEventType("TokenSaleStarted", List(
-      new TypeReference[Bytes32](true) {},      //  entityId
-      new TypeReference[Uint256](false) {},     //  offerId
-      new TypeReference[Utf8String](false) {},  //  tokenSymbol
-      new TypeReference[Utf8String](false) {}   //  tokenName
+      new TypeReference[Bytes32](true) {}, //  entityId
+      new TypeReference[Uint256](false) {}, //  offerId
+      new TypeReference[Utf8String](false) {}, //  tokenSymbol
+      new TypeReference[Utf8String](false) {} //  tokenName
     ).asJava),
 
     new Web3jEventType("SupportedTokenAdded", List(
@@ -165,12 +165,12 @@ case class EventResolverImpl() extends EventResolver {
     ).asJava),
 
     new Web3jEventType("OwnershipTransferred", List(
-      new TypeReference[Address](true) {},    // previous owner
-      new TypeReference[Address](true) {}     // new owner
+      new TypeReference[Address](true) {}, // previous owner
+      new TypeReference[Address](true) {} // new owner
     ).asJava),
 
     new Web3jEventType("InitializeDiamond", List(
-      new TypeReference[Address](false) {}    // sender
+      new TypeReference[Address](false) {} // sender
     ).asJava)
 
   ).map { event =>
@@ -304,12 +304,11 @@ case class EventResolverImpl() extends EventResolver {
       val indexedDecoded = (0 until eventType.getIndexedParameters.size())
         .map(x => FunctionReturnDecoder.decodeIndexedValue(logObj.getTopics.get(x + 1), eventType.getIndexedParameters.get(x))).toList
 
-      (indexedDecoded ++ nonIndexedDecoded)
+      indexedDecoded ++ nonIndexedDecoded
     } catch {
-      case e: IndexOutOfBoundsException => {
+      case e: IndexOutOfBoundsException =>
         println(s"#${logObj.getBlockNumber} | TX: ${logObj.getTransactionHash} => `'${eventType.getName}` decoding failed due to: ${e.getMessage}`")
         throw e
-      }
     }
   }
 }

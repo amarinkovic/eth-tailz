@@ -1,6 +1,7 @@
 .bloop/
 .bsp/
 .idea/
+reports/
 target/
 
 .metals/
@@ -8,3 +9,5 @@ project/metals.sbt
 project/project/
 
 .vscode/settings.json
+
+.DS_Store
