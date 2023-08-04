@@ -8,12 +8,12 @@ import org.web3j.protocol.core.methods.request.EthFilter
 import org.web3j.protocol.core.methods.response.EthLog.LogObject
 import org.web3j.protocol.core.methods.response.{EthBlock, EthLog}
 import org.web3j.protocol.core.{DefaultBlockParameter, DefaultBlockParameterName, DefaultBlockParameterNumber}
-import zio.*
+import zio._
 import zio.Console.printLine
 import zio.System.SystemLive
 import zio.cli.HelpDoc.Span.text
-import zio.cli.*
-import zio.stream.*
+import zio.cli._
+import zio.stream._
 
 import java.math.BigInteger
 import scala.jdk.CollectionConverters.*
@@ -40,6 +40,7 @@ object App extends ZIOCliDefault {
        pollingInterval: Duration,
        chunkSize: Int
   ): ZStream[Web3Service, Throwable, EthLogEvent] = {
+    val waitMessage = s"--- reached current block, sleeping for ${pollingInterval.getSeconds} seconds"
 
     ZStream.fromZIO(ZIO.service[Web3Service]).flatMap { web3Service =>
       ZStream.unfoldChunkZIO(initialFrom) { from =>
@@ -47,8 +48,7 @@ object App extends ZIOCliDefault {
           currentBlock <- web3Service.getCurrentBlockNumber
           to <- ZIO.succeed(currentBlock.min(from + chunkSize))
           _ <- if (to == currentBlock && forever) {
-            println(s" >> reached current block, sleeping for ${pollingInterval.getSeconds} seconds")
-            ZIO.sleep(pollingInterval)
+            Console.printLine(waitMessage) *> ZIO.sleep(pollingInterval)
           } else ZIO.unit
           logs <- web3Service.getLogs(contractAddress, from, to)
         } yield
