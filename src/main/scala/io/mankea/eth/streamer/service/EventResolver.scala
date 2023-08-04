@@ -12,29 +12,31 @@ import java.nio.charset.StandardCharsets
 import scala.jdk.CollectionConverters._
 
 type Web3jEventType = Event
+type Bytes32String = String
+type AddressString = String
 
 sealed trait TypedEvent
 
-case class InitializeDiamond(sender: String) extends TypedEvent
-case class EntityCreated(entityId: String, entityAdmin: String) extends TypedEvent
-case class EntityUpdated(entityId: String) extends TypedEvent
-case class RoleUpdated(objectId: String, contextId: String, roleId: String, funcName: String) extends TypedEvent
+case class InitializeDiamond(sender: AddressString) extends TypedEvent
+case class EntityCreated(entityId: Bytes32String, entityAdmin: Bytes32String) extends TypedEvent
+case class EntityUpdated(entityId: Bytes32String) extends TypedEvent
+case class RoleUpdated(objectId: Bytes32String, contextId: Bytes32String, roleId: Bytes32String, funcName: String) extends TypedEvent
 case class RoleGroupUpdated(role: String, group: String, roleInGroup: Boolean) extends TypedEvent
 case class RoleCanAssignUpdated(role: String, group: String) extends TypedEvent
-case class OrderAdded(orderId: Long, maker: String, sellToken: String, sellAmount: BigInt, sellAmountInitial: BigInt, buyToken: String, buyAmount: BigInt, buyAmountInitial: BigInt, state: Int) extends TypedEvent
-case class OrderExecuted(orderId: Long, taker: String, sellToken: String, sellAmount: BigInt, buyToken: String, buyAmount: BigInt, state: Int) extends TypedEvent
-case class OrderCancelled(orderId: Long, taker: String, sellToken: String) extends TypedEvent
-case class SimplePolicyCreated(id: String, entityId: String) extends TypedEvent
-case class SimplePolicyPremiumPaid(id: String, amount: BigInt) extends TypedEvent
-case class SimplePolicyClaimPaid(claimId: String, policyId: String, insuredId: String, amount: BigInt) extends TypedEvent
-case class SimplePolicyMatured(id: String) extends TypedEvent
-case class SimplePolicyCancelled(id: String) extends TypedEvent
-case class InternalTokenBalanceUpdate(ownerId: String, tokenId: String, newAmount: BigInt, funcName: String, sender: String) extends TypedEvent
-case class InternalTokenSupplyUpdate(tokenId: String, newTokenSupply: BigInt, funcName: String, sender: String) extends TypedEvent
-case class OwnershipTransferred(previousOwner: String, newOwner: String) extends TypedEvent
-case class TokenSaleStarted(entityId: String, offerId: Long, tokenSymbol: String, tokenName: String) extends TypedEvent
-case class SupportedTokenAdded(tokenAddress: String) extends TypedEvent
-case class DividendDistribution(guid: String, from: String, to: String, dividendTokenId: String, amount: BigInt) extends TypedEvent
+case class OrderAdded(orderId: Long, maker: Bytes32String, sellToken: Bytes32String, sellAmount: BigInt, sellAmountInitial: BigInt, buyToken: Bytes32String, buyAmount: BigInt, buyAmountInitial: BigInt, state: Int) extends TypedEvent
+case class OrderExecuted(orderId: Long, taker: Bytes32String, sellToken: Bytes32String, sellAmount: BigInt, buyToken: Bytes32String, buyAmount: BigInt, state: Int) extends TypedEvent
+case class OrderCancelled(orderId: Long, taker: Bytes32String, sellToken: Bytes32String) extends TypedEvent
+case class SimplePolicyCreated(id: Bytes32String, entityId: Bytes32String) extends TypedEvent
+case class SimplePolicyPremiumPaid(id: Bytes32String, amount: BigInt) extends TypedEvent
+case class SimplePolicyClaimPaid(claimId: Bytes32String, policyId: Bytes32String, insuredId: Bytes32String, amount: BigInt) extends TypedEvent
+case class SimplePolicyMatured(id: Bytes32String) extends TypedEvent
+case class SimplePolicyCancelled(id: Bytes32String) extends TypedEvent
+case class InternalTokenBalanceUpdate(ownerId: Bytes32String, tokenId: Bytes32String, newAmount: BigInt, funcName: String, sender: AddressString) extends TypedEvent
+case class InternalTokenSupplyUpdate(tokenId: Bytes32String, newTokenSupply: BigInt, funcName: String, sender: AddressString) extends TypedEvent
+case class OwnershipTransferred(previousOwner: AddressString, newOwner: AddressString) extends TypedEvent
+case class TokenSaleStarted(entityId: Bytes32String, offerId: Long, tokenSymbol: String, tokenName: String) extends TypedEvent
+case class SupportedTokenAdded(tokenAddress: AddressString) extends TypedEvent
+case class DividendDistribution(guid: Bytes32String, from: Bytes32String, to: Bytes32String, dividendTokenId: Bytes32String, amount: BigInt) extends TypedEvent
 case class Unsupported(topic: String) extends TypedEvent
 
 object EventResolver {
@@ -178,7 +180,7 @@ object EventResolver {
     val eventName = getName(topic)
 
     evenTypes.get(topic).map(t => decode(obj, t)) match {
-      case Some(decodedAttrs) => {
+      case Some(decodedAttrs) =>
         eventName match
           case "DividendDistribution" =>
             DividendDistribution(
@@ -285,7 +287,6 @@ object EventResolver {
           case "InitializeDiamond" =>
             InitializeDiamond(sender = decodedAttrs.asJava.get(0).getValue.toString)
           case _ => Unsupported(eventName)
-      }
       case None => Unsupported(topic)
     }
   }
