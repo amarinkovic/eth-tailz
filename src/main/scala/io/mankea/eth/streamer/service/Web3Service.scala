@@ -18,6 +18,7 @@ import java.net.SocketTimeoutException
 
 given Conversion[BigInt, DefaultBlockParameter] = b => DefaultBlockParameter.valueOf(b.bigInteger)
 given Conversion[BigInteger, BigInt] = BigInt.javaBigInteger2bigInt(_)
+
 case class EthLogEvent(blockNumber: BigInt, transactionHash: String, logIndex: Long, event: TypedEvent)
 
 sealed trait Web3Service {
@@ -63,7 +64,7 @@ object Web3Service {
   val live: ZLayer[EventResolver, zio.Config.Error, Web3Service] =
     ZLayer {
       for {
-        nodeUrl <- ZIO.config(Config.string("ETH_SEPOLIA_RPC_URL"))
+        nodeUrl <- ZIO.config(Config.string("ETH_MAINNET_RPC_URL"))
         web3j <- ZIO.succeed(Web3j.build(new HttpService(nodeUrl)))
         eventResolver <- ZIO.service[EventResolver]
       } yield Web3ServiceImpl(web3j, eventResolver)
