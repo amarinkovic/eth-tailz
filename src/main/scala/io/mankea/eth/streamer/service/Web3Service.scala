@@ -17,6 +17,7 @@ import scala.jdk.CollectionConverters._
 import java.net.SocketTimeoutException
 
 given Conversion[BigInt, DefaultBlockParameter] = b => DefaultBlockParameter.valueOf(b.bigInteger)
+given Conversion[BigInteger, BigInt] = BigInt.javaBigInteger2bigInt(_)
 case class EthLogEvent(blockNumber: BigInt, transactionHash: String, logIndex: Long, event: TypedEvent)
 
 sealed trait Web3Service {
@@ -27,7 +28,7 @@ sealed trait Web3Service {
 case class Web3ServiceImpl(web3j: Web3j, eventResolver: EventResolver) extends Web3Service {
 
   override def getCurrentBlockNumber: Task[BigInt] =
-    ZIO.attempt(web3j.ethBlockNumber.send.getBlockNumber).map(BigInt.javaBigInteger2bigInt)
+    ZIO.attempt(web3j.ethBlockNumber.send.getBlockNumber)
 
   override def getLogs(contractAddress: String, from: BigInt, to: BigInt): Task[List[EthLogEvent]] =
     val filter = EthFilter(from, to, contractAddress)
