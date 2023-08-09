@@ -10,7 +10,7 @@ import org.web3j.utils.Numeric
 import zio.{Task, ZIO, ZLayer}
 
 import java.nio.charset.StandardCharsets
-import scala.jdk.CollectionConverters.*
+import scala.jdk.CollectionConverters._
 
 type Web3jEventType = Event
 type Bytes32String = String
@@ -61,43 +61,43 @@ case class EventResolverImpl() extends EventResolver {
     ).asJava),
 
     new Web3jEventType("RoleUpdated", List(
-      new TypeReference[Bytes32](true) {}, //  objectId
-      new TypeReference[Bytes32](false) {}, //  contextId
-      new TypeReference[Bytes32](false) {}, //  roleId
+      new TypeReference[Bytes32](true) {},    //  objectId
+      new TypeReference[Bytes32](false) {},   //  contextId
+      new TypeReference[Bytes32](false) {},   //  roleId
       new TypeReference[Utf8String](false) {} //  functionName
     ).asJava),
 
     new Web3jEventType("RoleGroupUpdated", List(
-      new TypeReference[Utf8String](false) {}, //  role
-      new TypeReference[Utf8String](false) {}, //  group
-      new TypeReference[Bool](false) {} //  roleInGroup
+      new TypeReference[Utf8String](false) {},  //  role
+      new TypeReference[Utf8String](false) {},  //  group
+      new TypeReference[Bool](false) {}         //  roleInGroup
     ).asJava),
 
     new Web3jEventType("RoleCanAssignUpdated", List(
-      new TypeReference[Utf8String](false) {}, // role
-      new TypeReference[Utf8String](false) {} // group
+      new TypeReference[Utf8String](false) {},  // role
+      new TypeReference[Utf8String](false) {}   // group
     ).asJava),
 
     new Web3jEventType("OrderAdded", List(
-      new TypeReference[Uint256](true) {}, //  orderId
-      new TypeReference[Bytes32](true) {}, //  maker
-      new TypeReference[Bytes32](true) {}, //  sellToken
+      new TypeReference[Uint256](true) {},  //  orderId
+      new TypeReference[Bytes32](true) {},  //  maker
+      new TypeReference[Bytes32](true) {},  //  sellToken
       new TypeReference[Uint256](false) {}, //  sellAmount
       new TypeReference[Uint256](false) {}, //  sellAmountInitial
       new TypeReference[Bytes32](false) {}, //  buyToken
       new TypeReference[Uint256](false) {}, //  buyAmount
       new TypeReference[Uint256](false) {}, //  buyAmountInitial
-      new TypeReference[Uint256](false) {} //  state
+      new TypeReference[Uint256](false) {}  //  state
     ).asJava),
 
     new Web3jEventType("OrderExecuted", List(
-      new TypeReference[Uint256](true) {}, //  orderId
-      new TypeReference[Bytes32](true) {}, //  taker
-      new TypeReference[Bytes32](true) {}, //  sellToken
+      new TypeReference[Uint256](true) {},  //  orderId
+      new TypeReference[Bytes32](true) {},  //  taker
+      new TypeReference[Bytes32](true) {},  //  sellToken
       new TypeReference[Uint256](false) {}, //  sellAmount
       new TypeReference[Bytes32](false) {}, //  buyToken
       new TypeReference[Uint256](false) {}, //  buyAmount
-      new TypeReference[Uint256](false) {} //  state
+      new TypeReference[Uint256](false) {}  //  state
     ).asJava),
 
     new Web3jEventType("OrderCancelled", List(
@@ -132,42 +132,42 @@ case class EventResolverImpl() extends EventResolver {
     ).asJava),
 
     new Web3jEventType("InternalTokenBalanceUpdate", List(
-      new TypeReference[Bytes32](true) {}, //  ownerId
-      new TypeReference[Bytes32](false) {}, //  tokenId
-      new TypeReference[Uint256](false) {}, //  newAmount
-      new TypeReference[Utf8String](false) {}, //  functionName
-      new TypeReference[Address](false) {} //  sender
+      new TypeReference[Bytes32](true) {},      //  ownerId
+      new TypeReference[Bytes32](false) {},     //  tokenId
+      new TypeReference[Uint256](false) {},     //  newAmount
+      new TypeReference[Utf8String](false) {},  //  functionName
+      new TypeReference[Address](false) {}      //  sender
     ).asJava),
 
     new Web3jEventType("InternalTokenSupplyUpdate", List(
-      new TypeReference[Bytes32](true) {}, //  tokenId
-      new TypeReference[Uint256](false) {}, //  newTokenSupply
-      new TypeReference[Utf8String](false) {}, //  functionName
-      new TypeReference[Address](false) {} //  sender
+      new TypeReference[Bytes32](true) {},      //  tokenId
+      new TypeReference[Uint256](false) {},     //  newTokenSupply
+      new TypeReference[Utf8String](false) {},  //  functionName
+      new TypeReference[Address](false) {}      //  sender
     ).asJava),
 
     new Web3jEventType("TokenSaleStarted", List(
-      new TypeReference[Bytes32](true) {}, //  entityId
-      new TypeReference[Uint256](false) {}, //  offerId
-      new TypeReference[Utf8String](false) {}, //  tokenSymbol
-      new TypeReference[Utf8String](false) {} //  tokenName
+      new TypeReference[Bytes32](true) {},      //  entityId
+      new TypeReference[Uint256](false) {},     //  offerId
+      new TypeReference[Utf8String](false) {},  //  tokenSymbol
+      new TypeReference[Utf8String](false) {}   //  tokenName
     ).asJava),
 
     new Web3jEventType("SupportedTokenAdded", List(
-      new TypeReference[Address](false) {} //  tokenAddress, current sepolia deploy had this flag set to: false
+      new TypeReference[Address](false) {}  //  tokenAddress, current sepolia deploy had this flag set to: false
     ).asJava),
 
     new Web3jEventType("DividendDistribution", List(
-      new TypeReference[Bytes32](true) {}, //  guid
+      new TypeReference[Bytes32](true) {},  //  guid
       new TypeReference[Bytes32](false) {}, //  from
       new TypeReference[Bytes32](false) {}, //  to
       new TypeReference[Bytes32](false) {}, //  dividendTokenId
-      new TypeReference[Uint256](false) {} //  amount
+      new TypeReference[Uint256](false) {}  //  amount
     ).asJava),
 
     new Web3jEventType("OwnershipTransferred", List(
-      new TypeReference[Address](true) {}, // previous owner
-      new TypeReference[Address](true) {} // new owner
+      new TypeReference[Address](true) {},  //  previous owner
+      new TypeReference[Address](true) {}   //  new owner
     ).asJava),
 
     new Web3jEventType("InitializeDiamond", List(
