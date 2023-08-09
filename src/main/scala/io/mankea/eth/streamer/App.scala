@@ -1,6 +1,6 @@
 package io.mankea.eth.streamer
 
-import io.mankea.eth.streamer.service.*
+import io.mankea.eth.streamer.service._
 import org.web3j.abi.FunctionReturnDecoder
 import org.web3j.abi.datatypes.Address
 import org.web3j.protocol.Web3j
@@ -16,8 +16,8 @@ import zio.cli._
 import zio.stream._
 
 import java.math.BigInteger
-import scala.jdk.CollectionConverters.*
 import java.nio.file.Path as JPath
+import scala.jdk.CollectionConverters.*
 
 object App extends ZIOCliDefault {
 
@@ -89,7 +89,8 @@ object App extends ZIOCliDefault {
         .via(pipeToString)
         .foreach(Console.printLine(_))
         .provide(
-          Web3Service.live
+          Web3Service.live,
+          EventResolver.live
         )
   }
 }

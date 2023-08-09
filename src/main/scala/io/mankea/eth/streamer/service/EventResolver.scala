@@ -1,12 +1,13 @@
 package io.mankea.eth.streamer.service
 
 import org.web3j.abi.datatypes.generated.{Bytes32, Uint256}
-import org.web3j.abi.datatypes.{Address, Event, Type, Utf8String, Bool}
+import org.web3j.abi.datatypes.{Address, Bool, Event, Type, Utf8String}
 import org.web3j.abi.{EventEncoder, FunctionReturnDecoder, TypeReference}
 import org.web3j.protocol.Web3j
 import org.web3j.protocol.core.methods.response.EthLog.LogObject
 import org.web3j.protocol.http.HttpService
 import org.web3j.utils.Numeric
+import zio.{Task, ZIO, ZLayer}
 
 import java.nio.charset.StandardCharsets
 import scala.jdk.CollectionConverters._
@@ -39,7 +40,11 @@ case class SupportedTokenAdded(tokenAddress: AddressString) extends TypedEvent
 case class DividendDistribution(guid: Bytes32String, from: Bytes32String, to: Bytes32String, dividendTokenId: Bytes32String, amount: BigInt) extends TypedEvent
 case class Unsupported(topic: String) extends TypedEvent
 
-object EventResolver {
+trait EventResolver {
+  def getTypedEvent(obj: LogObject): Task[TypedEvent]
+}
+
+case class EventResolverImpl() extends EventResolver {
 
   private val evenTypes: Map[String, Web3jEventType] = List(
     new Web3jEventType("InitializeDiamond", List(
@@ -56,21 +61,21 @@ object EventResolver {
     ).asJava),
 
     new Web3jEventType("RoleUpdated", List(
-      new TypeReference[Bytes32](true) {}, //  objectId
-      new TypeReference[Bytes32](false) {}, //  contextId
-      new TypeReference[Bytes32](false) {}, //  roleId
+      new TypeReference[Bytes32](true) {},    //  objectId
+      new TypeReference[Bytes32](false) {},   //  contextId
+      new TypeReference[Bytes32](false) {},   //  roleId
       new TypeReference[Utf8String](false) {} //  functionName
     ).asJava),
 
     new Web3jEventType("RoleGroupUpdated", List(
-      new TypeReference[Utf8String](false) {}, //  role
-      new TypeReference[Utf8String](false) {}, //  group
-      new TypeReference[Bool](false) {}        //  roleInGroup
+      new TypeReference[Utf8String](false) {},  //  role
+      new TypeReference[Utf8String](false) {},  //  group
+      new TypeReference[Bool](false) {}         //  roleInGroup
     ).asJava),
 
     new Web3jEventType("RoleCanAssignUpdated", List(
-      new TypeReference[Utf8String](false) {}, // role
-      new TypeReference[Utf8String](false) {} // group
+      new TypeReference[Utf8String](false) {},  // role
+      new TypeReference[Utf8String](false) {}   // group
     ).asJava),
 
     new Web3jEventType("OrderAdded", List(
@@ -90,7 +95,7 @@ object EventResolver {
       new TypeReference[Bytes32](true) {},  //  taker
       new TypeReference[Bytes32](true) {},  //  sellToken
       new TypeReference[Uint256](false) {}, //  sellAmount
-      new TypeReference[Bytes32](false) {},  //  buyToken
+      new TypeReference[Bytes32](false) {}, //  buyToken
       new TypeReference[Uint256](false) {}, //  buyAmount
       new TypeReference[Uint256](false) {}  //  state
     ).asJava),
@@ -149,24 +154,24 @@ object EventResolver {
     ).asJava),
 
     new Web3jEventType("SupportedTokenAdded", List(
-      new TypeReference[Address](false) {} //  tokenAddress, current sepolia deploy had this flag set to: false
+      new TypeReference[Address](false) {}  //  tokenAddress, current sepolia deploy had this flag set to: false
     ).asJava),
 
     new Web3jEventType("DividendDistribution", List(
-      new TypeReference[Bytes32](true) {}, //  guid
+      new TypeReference[Bytes32](true) {},  //  guid
       new TypeReference[Bytes32](false) {}, //  from
       new TypeReference[Bytes32](false) {}, //  to
       new TypeReference[Bytes32](false) {}, //  dividendTokenId
-      new TypeReference[Uint256](false) {} //  amount
+      new TypeReference[Uint256](false) {}  //  amount
     ).asJava),
 
     new Web3jEventType("OwnershipTransferred", List(
-      new TypeReference[Address](true) {},    // previous owner
-      new TypeReference[Address](true) {}     // new owner
+      new TypeReference[Address](true) {},  //  previous owner
+      new TypeReference[Address](true) {}   //  new owner
     ).asJava),
 
     new Web3jEventType("InitializeDiamond", List(
-      new TypeReference[Address](false) {}    // sender
+      new TypeReference[Address](false) {} // sender
     ).asJava)
 
   ).map { event =>
@@ -175,119 +180,121 @@ object EventResolver {
 
   private def getName(topic: String): String = evenTypes.get(topic).map(_.getName).getOrElse(topic)
 
-  def getTypedEvent(obj: LogObject): TypedEvent = {
+  def getTypedEvent(obj: LogObject): Task[TypedEvent] = {
     val topic = obj.getTopics.get(0)
     val eventName = getName(topic)
 
-    evenTypes.get(topic).map(t => decode(obj, t)) match {
-      case Some(decodedAttrs) =>
-        eventName match
-          case "DividendDistribution" =>
-            DividendDistribution(
-              guid = Numeric.toHexString(decodedAttrs.asJava.get(0).asInstanceOf[Bytes32].getValue),
-              from = Numeric.toHexString(decodedAttrs.asJava.get(1).asInstanceOf[Bytes32].getValue),
-              to = Numeric.toHexString(decodedAttrs.asJava.get(2).asInstanceOf[Bytes32].getValue),
-              dividendTokenId = Numeric.toHexString(decodedAttrs.asJava.get(3).asInstanceOf[Bytes32].getValue),
-              amount = BigInt(decodedAttrs.asJava.get(4).asInstanceOf[Uint256].getValue)
-            )
-          case "TokenSaleStarted" =>
-            TokenSaleStarted(
-              entityId = Numeric.toHexString(decodedAttrs.asJava.get(0).asInstanceOf[Bytes32].getValue),
-              offerId = decodedAttrs.asJava.get(1).asInstanceOf[Uint256].getValue.longValueExact,
-              tokenSymbol = decodedAttrs.asJava.get(2).asInstanceOf[Utf8String].getValue,
-              tokenName = decodedAttrs.asJava.get(3).asInstanceOf[Utf8String].getValue
-            )
-          case "SimplePolicyCreated" =>
-            SimplePolicyCreated(
-              id = Numeric.toHexString(decodedAttrs.asJava.get(0).asInstanceOf[Bytes32].getValue),
-              entityId = Numeric.toHexString(decodedAttrs.asJava.get(1).asInstanceOf[Bytes32].getValue)
-            )
-          case "SimplePolicyPremiumPaid" =>
-            SimplePolicyPremiumPaid(
-              id = Numeric.toHexString(decodedAttrs.asJava.get(0).asInstanceOf[Bytes32].getValue),
-              amount = BigInt(decodedAttrs.asJava.get(1).asInstanceOf[Uint256].getValue)
-            )
-          case "SimplePolicyClaimPaid" =>
-            SimplePolicyClaimPaid(
-              claimId = Numeric.toHexString(decodedAttrs.asJava.get(0).asInstanceOf[Bytes32].getValue),
-              policyId = Numeric.toHexString(decodedAttrs.asJava.get(1).asInstanceOf[Bytes32].getValue),
-              insuredId = Numeric.toHexString(decodedAttrs.asJava.get(2).asInstanceOf[Bytes32].getValue),
-              amount = BigInt(decodedAttrs.asJava.get(3).asInstanceOf[Uint256].getValue)
-            )
-          case "SimplePolicyMatured" =>
-            SimplePolicyMatured(
-              id = Numeric.toHexString(decodedAttrs.asJava.get(0).asInstanceOf[Bytes32].getValue)
-            )
-          case "SimplePolicyCancelled" =>
-            SimplePolicyCancelled(
-              id = Numeric.toHexString(decodedAttrs.asJava.get(0).asInstanceOf[Bytes32].getValue)
-            )
-          case "EntityCreated" =>
-            EntityCreated(
-              entityId = Numeric.toHexString(decodedAttrs.asJava.get(0).asInstanceOf[Bytes32].getValue),
-              entityAdmin = Numeric.toHexString(decodedAttrs.asJava.get(1).asInstanceOf[Bytes32].getValue)
-            )
-          case "EntityUpdated" =>
-            EntityUpdated(
-              entityId = Numeric.toHexString(decodedAttrs.asJava.get(0).asInstanceOf[Bytes32].getValue)
-            )
-          case "RoleUpdated" =>
-            RoleUpdated(
-              objectId = Numeric.toHexString(decodedAttrs.asJava.get(0).asInstanceOf[Bytes32].getValue),
-              contextId = Numeric.toHexString(decodedAttrs.asJava.get(1).asInstanceOf[Bytes32].getValue),
-              roleId = Numeric.toHexString(decodedAttrs.asJava.get(2).asInstanceOf[Bytes32].getValue),
-              funcName = decodedAttrs.asJava.get(3).asInstanceOf[Utf8String].getValue
-            )
-          case "RoleGroupUpdated" =>
-            RoleGroupUpdated(
-              role = decodedAttrs.asJava.get(0).asInstanceOf[Utf8String].getValue,
-              group = decodedAttrs.asJava.get(1).asInstanceOf[Utf8String].getValue,
-              roleInGroup = decodedAttrs.asJava.get(2).asInstanceOf[Bool].getValue
-            )
-          case "RoleCanAssignUpdated" =>
-            RoleCanAssignUpdated(
-              role = decodedAttrs.asJava.get(0).getValue.toString,
-              group = decodedAttrs.asJava.get(1).getValue.toString
-            )
-          case "SupportedTokenAdded" =>
-            SupportedTokenAdded(tokenAddress = decodedAttrs.asJava.get(0).getValue.toString)
-          case "OrderAdded" =>
-            OrderAdded(
-              orderId = decodedAttrs.asJava.get(0).asInstanceOf[Uint256].getValue.longValueExact,
-              maker = Numeric.toHexString(decodedAttrs.asJava.get(1).asInstanceOf[Bytes32].getValue),
-              sellToken = Numeric.toHexString(decodedAttrs.asJava.get(2).asInstanceOf[Bytes32].getValue),
-              sellAmount = BigInt(decodedAttrs.asJava.get(3).asInstanceOf[Uint256].getValue),
-              sellAmountInitial = BigInt(decodedAttrs.asJava.get(4).asInstanceOf[Uint256].getValue),
-              buyToken = Numeric.toHexString(decodedAttrs.asJava.get(5).asInstanceOf[Bytes32].getValue),
-              buyAmount = BigInt(decodedAttrs.asJava.get(6).asInstanceOf[Uint256].getValue),
-              buyAmountInitial = BigInt(decodedAttrs.asJava.get(7).asInstanceOf[Uint256].getValue),
-              state = decodedAttrs.asJava.get(8).asInstanceOf[Uint256].getValue.longValueExact.toInt
-            )
-          case "OrderExecuted" =>
-            OrderExecuted(
-              orderId = decodedAttrs.asJava.get(0).asInstanceOf[Uint256].getValue.longValueExact,
-              taker = Numeric.toHexString(decodedAttrs.asJava.get(1).asInstanceOf[Bytes32].getValue),
-              sellToken = Numeric.toHexString(decodedAttrs.asJava.get(2).asInstanceOf[Bytes32].getValue),
-              sellAmount = BigInt(decodedAttrs.asJava.get(3).asInstanceOf[Uint256].getValue),
-              buyToken = Numeric.toHexString(decodedAttrs.asJava.get(4).asInstanceOf[Bytes32].getValue),
-              buyAmount = BigInt(decodedAttrs.asJava.get(5).asInstanceOf[Uint256].getValue),
-              state = decodedAttrs.asJava.get(6).asInstanceOf[Uint256].getValue.longValueExact.toInt
-            )
-          case "OrderCancelled" =>
-            OrderCancelled(
-              orderId = decodedAttrs.asJava.get(0).asInstanceOf[Uint256].getValue.longValueExact,
-              taker = Numeric.toHexString(decodedAttrs.asJava.get(1).asInstanceOf[Bytes32].getValue),
-              sellToken = Numeric.toHexString(decodedAttrs.asJava.get(2).asInstanceOf[Bytes32].getValue)
-            )
-          case "OwnershipTransferred" =>
-            OwnershipTransferred(
-              previousOwner = decodedAttrs.asJava.get(0).getValue.toString,
-              newOwner = decodedAttrs.asJava.get(1).getValue.toString
-            )
-          case "InitializeDiamond" =>
-            InitializeDiamond(sender = decodedAttrs.asJava.get(0).getValue.toString)
-          case _ => Unsupported(eventName)
-      case None => Unsupported(topic)
+    ZIO.attempt {
+      evenTypes.get(topic).map(t => decode(obj, t)) match {
+        case Some(decodedAttrs) =>
+          eventName match
+            case "DividendDistribution" =>
+              DividendDistribution(
+                guid = Numeric.toHexString(decodedAttrs.asJava.get(0).asInstanceOf[Bytes32].getValue),
+                from = Numeric.toHexString(decodedAttrs.asJava.get(1).asInstanceOf[Bytes32].getValue),
+                to = Numeric.toHexString(decodedAttrs.asJava.get(2).asInstanceOf[Bytes32].getValue),
+                dividendTokenId = Numeric.toHexString(decodedAttrs.asJava.get(3).asInstanceOf[Bytes32].getValue),
+                amount = BigInt(decodedAttrs.asJava.get(4).asInstanceOf[Uint256].getValue)
+              )
+            case "TokenSaleStarted" =>
+              TokenSaleStarted(
+                entityId = Numeric.toHexString(decodedAttrs.asJava.get(0).asInstanceOf[Bytes32].getValue),
+                offerId = decodedAttrs.asJava.get(1).asInstanceOf[Uint256].getValue.longValueExact,
+                tokenSymbol = decodedAttrs.asJava.get(2).asInstanceOf[Utf8String].getValue,
+                tokenName = decodedAttrs.asJava.get(3).asInstanceOf[Utf8String].getValue
+              )
+            case "SimplePolicyCreated" =>
+              SimplePolicyCreated(
+                id = Numeric.toHexString(decodedAttrs.asJava.get(0).asInstanceOf[Bytes32].getValue),
+                entityId = Numeric.toHexString(decodedAttrs.asJava.get(1).asInstanceOf[Bytes32].getValue)
+              )
+            case "SimplePolicyPremiumPaid" =>
+              SimplePolicyPremiumPaid(
+                id = Numeric.toHexString(decodedAttrs.asJava.get(0).asInstanceOf[Bytes32].getValue),
+                amount = BigInt(decodedAttrs.asJava.get(1).asInstanceOf[Uint256].getValue)
+              )
+            case "SimplePolicyClaimPaid" =>
+              SimplePolicyClaimPaid(
+                claimId = Numeric.toHexString(decodedAttrs.asJava.get(0).asInstanceOf[Bytes32].getValue),
+                policyId = Numeric.toHexString(decodedAttrs.asJava.get(1).asInstanceOf[Bytes32].getValue),
+                insuredId = Numeric.toHexString(decodedAttrs.asJava.get(2).asInstanceOf[Bytes32].getValue),
+                amount = BigInt(decodedAttrs.asJava.get(3).asInstanceOf[Uint256].getValue)
+              )
+            case "SimplePolicyMatured" =>
+              SimplePolicyMatured(
+                id = Numeric.toHexString(decodedAttrs.asJava.get(0).asInstanceOf[Bytes32].getValue)
+              )
+            case "SimplePolicyCancelled" =>
+              SimplePolicyCancelled(
+                id = Numeric.toHexString(decodedAttrs.asJava.get(0).asInstanceOf[Bytes32].getValue)
+              )
+            case "EntityCreated" =>
+              EntityCreated(
+                entityId = Numeric.toHexString(decodedAttrs.asJava.get(0).asInstanceOf[Bytes32].getValue),
+                entityAdmin = Numeric.toHexString(decodedAttrs.asJava.get(1).asInstanceOf[Bytes32].getValue)
+              )
+            case "EntityUpdated" =>
+              EntityUpdated(
+                entityId = Numeric.toHexString(decodedAttrs.asJava.get(0).asInstanceOf[Bytes32].getValue)
+              )
+            case "RoleUpdated" =>
+              RoleUpdated(
+                objectId = Numeric.toHexString(decodedAttrs.asJava.get(0).asInstanceOf[Bytes32].getValue),
+                contextId = Numeric.toHexString(decodedAttrs.asJava.get(1).asInstanceOf[Bytes32].getValue),
+                roleId = Numeric.toHexString(decodedAttrs.asJava.get(2).asInstanceOf[Bytes32].getValue),
+                funcName = decodedAttrs.asJava.get(3).asInstanceOf[Utf8String].getValue
+              )
+            case "RoleGroupUpdated" =>
+              RoleGroupUpdated(
+                role = decodedAttrs.asJava.get(0).asInstanceOf[Utf8String].getValue,
+                group = decodedAttrs.asJava.get(1).asInstanceOf[Utf8String].getValue,
+                roleInGroup = decodedAttrs.asJava.get(2).asInstanceOf[Bool].getValue
+              )
+            case "RoleCanAssignUpdated" =>
+              RoleCanAssignUpdated(
+                role = decodedAttrs.asJava.get(0).getValue.toString,
+                group = decodedAttrs.asJava.get(1).getValue.toString
+              )
+            case "SupportedTokenAdded" =>
+              SupportedTokenAdded(tokenAddress = decodedAttrs.asJava.get(0).getValue.toString)
+            case "OrderAdded" =>
+              OrderAdded(
+                orderId = decodedAttrs.asJava.get(0).asInstanceOf[Uint256].getValue.longValueExact,
+                maker = Numeric.toHexString(decodedAttrs.asJava.get(1).asInstanceOf[Bytes32].getValue),
+                sellToken = Numeric.toHexString(decodedAttrs.asJava.get(2).asInstanceOf[Bytes32].getValue),
+                sellAmount = BigInt(decodedAttrs.asJava.get(3).asInstanceOf[Uint256].getValue),
+                sellAmountInitial = BigInt(decodedAttrs.asJava.get(4).asInstanceOf[Uint256].getValue),
+                buyToken = Numeric.toHexString(decodedAttrs.asJava.get(5).asInstanceOf[Bytes32].getValue),
+                buyAmount = BigInt(decodedAttrs.asJava.get(6).asInstanceOf[Uint256].getValue),
+                buyAmountInitial = BigInt(decodedAttrs.asJava.get(7).asInstanceOf[Uint256].getValue),
+                state = decodedAttrs.asJava.get(8).asInstanceOf[Uint256].getValue.longValueExact.toInt
+              )
+            case "OrderExecuted" =>
+              OrderExecuted(
+                orderId = decodedAttrs.asJava.get(0).asInstanceOf[Uint256].getValue.longValueExact,
+                taker = Numeric.toHexString(decodedAttrs.asJava.get(1).asInstanceOf[Bytes32].getValue),
+                sellToken = Numeric.toHexString(decodedAttrs.asJava.get(2).asInstanceOf[Bytes32].getValue),
+                sellAmount = BigInt(decodedAttrs.asJava.get(3).asInstanceOf[Uint256].getValue),
+                buyToken = Numeric.toHexString(decodedAttrs.asJava.get(4).asInstanceOf[Bytes32].getValue),
+                buyAmount = BigInt(decodedAttrs.asJava.get(5).asInstanceOf[Uint256].getValue),
+                state = decodedAttrs.asJava.get(6).asInstanceOf[Uint256].getValue.longValueExact.toInt
+              )
+            case "OrderCancelled" =>
+              OrderCancelled(
+                orderId = decodedAttrs.asJava.get(0).asInstanceOf[Uint256].getValue.longValueExact,
+                taker = Numeric.toHexString(decodedAttrs.asJava.get(1).asInstanceOf[Bytes32].getValue),
+                sellToken = Numeric.toHexString(decodedAttrs.asJava.get(2).asInstanceOf[Bytes32].getValue)
+              )
+            case "OwnershipTransferred" =>
+              OwnershipTransferred(
+                previousOwner = decodedAttrs.asJava.get(0).getValue.toString,
+                newOwner = decodedAttrs.asJava.get(1).getValue.toString
+              )
+            case "InitializeDiamond" =>
+              InitializeDiamond(sender = decodedAttrs.asJava.get(0).getValue.toString)
+            case _ => Unsupported(eventName)
+        case None => Unsupported(topic)
+      }
     }
   }
 
@@ -300,8 +307,18 @@ object EventResolver {
       indexedDecoded ++ nonIndexedDecoded
     } catch {
       case e: IndexOutOfBoundsException =>
-        println(s"`'${eventType.getName}` decoding failed due to: ${e.getMessage}`")
+        println(s"#${logObj.getBlockNumber} | TX: ${logObj.getTransactionHash} => `'${eventType.getName}` decoding failed due to: ${e.getMessage}`")
         throw e
     }
   }
+}
+
+object EventResolver {
+
+  def getTypedEvent(obj: LogObject): ZIO[EventResolver, Throwable, TypedEvent] =
+    ZIO.serviceWithZIO[EventResolver](_.getTypedEvent(obj))
+
+  val live: ZLayer[Any, Nothing, EventResolver] =
+    ZLayer.succeed(new EventResolverImpl)
+
 }
