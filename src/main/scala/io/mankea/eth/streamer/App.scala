@@ -47,10 +47,10 @@ object App extends ZIOCliDefault {
         for {
           currentBlock <- web3Service.getCurrentBlockNumber
           to <- ZIO.succeed(currentBlock.min(from + chunkSize))
-          _ <- if (to == currentBlock && forever) {
+          logs <- web3Service.getLogs(contractAddress, from, to)
+          _ <- if (to == currentBlock && forever && logs.isEmpty) {
             Console.printLine(waitMessage) *> ZIO.sleep(pollingInterval)
           } else ZIO.unit
-          logs <- web3Service.getLogs(contractAddress, from, to)
         } yield
           if (to == currentBlock && !forever) None // finish at current block
           else Some((Chunk.fromIterable(logs), to + 1))
