@@ -1,6 +1,5 @@
 package io.mankea.eth.streamer.service
 
-import io.mankea.eth.streamer.config.AppConfig
 import org.web3j.abi.FunctionReturnDecoder
 import org.web3j.protocol.core.{DefaultBlockParameter, DefaultBlockParameterName}
 import org.web3j.protocol.{Web3j, Web3jService}
@@ -38,7 +37,7 @@ case class Web3ServiceImpl(web3j: Web3j, eventResolver: EventResolver) extends W
 
     for {
       logs <- ZIO.attemptBlockingIO(web3j.ethGetLogs(filter).send().getLogs.asScala.toList.asInstanceOf[List[EthLog.LogObject]])
-      _ <- Console.printLine(s"#${from} -> #${to} | ${logs.size} events")
+      _ <- Console.printLine(s"#$from -> #$to | ${logs.size} events")
       typedEvents <- ZIO.collectAll(
         for {
           logObj <- logs
@@ -60,11 +59,11 @@ object Web3Service {
   def getLogs(contractAddress: String, from: BigInteger, to: BigInteger): ZIO[Web3Service, Throwable, List[EthLogEvent]] =
     ZIO.serviceWithZIO[Web3Service](_.getLogs(contractAddress, from, to))
 
-  val live: ZLayer[AppConfig with EventResolver, Nothing, Web3Service] =
+  val live: ZLayer[EventResolver, zio.Config.Error, Web3Service] =
     ZLayer {
       for {
-        cfg <- ZIO.service[AppConfig]
-        web3j <- ZIO.succeed(Web3j.build(new HttpService(cfg.nodeUrl)))
+        nodeUrl <- ZIO.config(Config.string("ETH_SEPOLIA_RPC_URL"))
+        web3j <- ZIO.succeed(Web3j.build(new HttpService(nodeUrl)))
         eventResolver <- ZIO.service[EventResolver]
       } yield Web3ServiceImpl(web3j, eventResolver)
     }

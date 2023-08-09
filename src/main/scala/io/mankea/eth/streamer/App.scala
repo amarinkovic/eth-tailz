@@ -1,6 +1,5 @@
 package io.mankea.eth.streamer
 
-import io.mankea.eth.streamer.config.AppConfig
 import io.mankea.eth.streamer.service.*
 import org.web3j.abi.FunctionReturnDecoder
 import org.web3j.abi.datatypes.Address
@@ -11,8 +10,9 @@ import org.web3j.protocol.core.methods.response.{EthBlock, EthLog}
 import org.web3j.protocol.core.{DefaultBlockParameter, DefaultBlockParameterName, DefaultBlockParameterNumber}
 import zio.*
 import zio.Console.printLine
-import zio.cli.*
+import zio.System.SystemLive
 import zio.cli.HelpDoc.Span.text
+import zio.cli.*
 import zio.stream.*
 
 import java.math.BigInteger
@@ -20,6 +20,8 @@ import java.nio.file.Path as JPath
 import scala.jdk.CollectionConverters.*
 
 object App extends ZIOCliDefault {
+
+  override val bootstrap: ZLayer[Any, Nothing, Unit] = Runtime.setConfigProvider(ConfigProvider.envProvider)
 
   private val defaultPollingInterval = 12.seconds
   private val defaultChunkSize = 10000
@@ -38,6 +40,7 @@ object App extends ZIOCliDefault {
        pollingInterval: Duration,
        chunkSize: Int
   ): ZStream[Web3Service, Throwable, EthLogEvent] = {
+    val waitMessage = s"--- reached current block, sleeping for ${pollingInterval.getSeconds} seconds"
 
     ZStream.fromZIO(ZIO.service[Web3Service]).flatMap { web3Service =>
       ZStream.unfoldChunkZIO(initialFrom) { from =>
@@ -45,8 +48,7 @@ object App extends ZIOCliDefault {
           currentBlock <- web3Service.getCurrentBlockNumber
           to <- ZIO.succeed(currentBlock.min(from + chunkSize))
           _ <- if (to == currentBlock && forever) {
-            println(s" >> reached current block, sleeping for ${pollingInterval.getSeconds} seconds")
-            ZIO.sleep(pollingInterval)
+            Console.printLine(waitMessage) *> ZIO.sleep(pollingInterval)
           } else ZIO.unit
           logs <- web3Service.getLogs(contractAddress, from, to)
         } yield
@@ -88,7 +90,7 @@ object App extends ZIOCliDefault {
         .foreach(Console.printLine(_))
         .provide(
           Web3Service.live,
-          AppConfig.live
+          EventResolver.live
         )
   }
 }
