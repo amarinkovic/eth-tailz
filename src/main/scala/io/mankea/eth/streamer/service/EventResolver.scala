@@ -13,8 +13,20 @@ import java.nio.charset.StandardCharsets
 import scala.jdk.CollectionConverters._
 
 type Web3jEventType = Event
-type Bytes32String = String
-type AddressString = String
+
+opaque type Bytes32String <: String = String
+object Bytes32String {
+  def apply(value: String) = new Bytes32String(value)
+  given Conversion[String, Bytes32String] = s => Bytes32String(s)
+  given Conversion[Bytes32String, String] = s => s
+}
+
+opaque type AddressString <: String = String
+object AddressString {
+  def apply(value: String) = new AddressString(value)
+  given Conversion[String, AddressString] = s => AddressString(s)
+  given Conversion[AddressString, String] = s => s
+}
 
 sealed trait TypedEvent
 
