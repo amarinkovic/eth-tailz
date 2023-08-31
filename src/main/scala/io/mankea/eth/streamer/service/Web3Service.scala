@@ -1,23 +1,16 @@
 package io.mankea.eth.streamer.service
 
-import org.web3j.abi.FunctionReturnDecoder
-import org.web3j.protocol.core.{DefaultBlockParameter, DefaultBlockParameterName}
-import org.web3j.protocol.{Web3j, Web3jService}
+import org.web3j.protocol.Web3j
+import org.web3j.protocol.core.DefaultBlockParameter
 import org.web3j.protocol.core.methods.request.EthFilter
-import org.web3j.protocol.core.methods.response.{EthBlock, EthLog}
 import org.web3j.protocol.core.methods.response.EthLog
 import org.web3j.protocol.http.HttpService
 import zio._
-import zio.stream.ZStream
-import io.mankea.eth.streamer.service.{EventResolver, TypedEvent}
 
-import java.io.IOException
 import java.math.BigInteger
 import scala.jdk.CollectionConverters._
-import java.net.SocketTimeoutException
 
 given Conversion[BigInt, DefaultBlockParameter] = b => DefaultBlockParameter.valueOf(b.bigInteger)
-given Conversion[BigInteger, BigInt] = BigInt.javaBigInteger2bigInt(_)
 
 case class EthLogEvent(blockNumber: BigInt, transactionHash: String, logIndex: Long, event: TypedEvent)
 

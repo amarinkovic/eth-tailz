@@ -1,16 +1,13 @@
 package io.mankea.eth.streamer.service
 
-import org.web3j.abi.datatypes.generated.{Bytes32, Uint256}
+import org.web3j.abi.datatypes.generated.{Bytes32, Uint256, Uint8}
 import org.web3j.abi.datatypes.{Address, Bool, Event, Type, Utf8String}
 import org.web3j.abi.{EventEncoder, FunctionReturnDecoder, TypeReference}
-import org.web3j.protocol.Web3j
 import org.web3j.protocol.core.methods.response.EthLog.LogObject
-import org.web3j.protocol.http.HttpService
 import org.web3j.utils.Numeric
 import zio.{Task, ZIO, ZLayer}
 
 import java.math.BigInteger
-import java.nio.charset.StandardCharsets
 import scala.jdk.CollectionConverters.*
 
 type Web3jEventType = Event
@@ -34,11 +31,10 @@ object AddressString {
 
 sealed trait TypedEvent
 
-//event DiamondCut(FacetCut[] _diamondCut, address _init, bytes _calldata);
-//event DiamondCut(IDiamondCut.FacetCut[] diamondCut, address init, bytes _calldata);
-
 case class CollateralRatioUpdated(entityId: Bytes32String, collateralRatio: Int, utilizedCapacity: BigInt) extends TypedEvent
 case class CreateUpgrade(id: Bytes32String, who: AddressString) extends TypedEvent
+//event DiamondCut(FacetCut[] _diamondCut, address _init, bytes _calldata);
+//event DiamondCut(IDiamondCut.FacetCut[] diamondCut, address init, bytes _calldata);
 case class DividendDistribution(guid: Bytes32String, from: Bytes32String, to: Bytes32String, dividendTokenId: Bytes32String, amount: BigInt) extends TypedEvent
 case class DividendWithdrawn(accountId: Bytes32String, tokenId: Bytes32String, amountOwned: BigInt, dividendTokenId: Bytes32String, dividendAmountWithdrawn: BigInt) extends TypedEvent
 case class EntityCreated(entityId: Bytes32String, entityAdmin: Bytes32String) extends TypedEvent
@@ -50,6 +46,10 @@ case class FeePaid(fromId: Bytes32String, toId: Bytes32String, tokenId: Bytes32S
 case class InitializeDiamond(sender: AddressString) extends TypedEvent
 case class InternalTokenBalanceUpdate(ownerId: Bytes32String, tokenId: Bytes32String, newAmount: BigInt, funcName: String, sender: AddressString) extends TypedEvent
 case class InternalTokenSupplyUpdate(tokenId: Bytes32String, newTokenSupply: BigInt, funcName: String, sender: AddressString) extends TypedEvent
+case class MakerBasisPointsUpdated(tradingCommissionMakerBP: Int) extends TypedEvent
+case class MaxDividendDenominationsUpdated(oldMax: Int, newMax: Int) extends TypedEvent
+case class ObjectCreated(objectId: Bytes32String, parentId: Bytes32String, hash: Bytes32String) extends TypedEvent
+case class ObjectUpdated(objectId: Bytes32String, parentId :Bytes32String, hash: Bytes32String) extends TypedEvent
 case class OrderAdded(orderId: Long, maker: Bytes32String, sellToken: Bytes32String, sellAmount: BigInt, sellAmountInitial: BigInt, buyToken: Bytes32String, buyAmount: BigInt, buyAmountInitial: BigInt, state: Int) extends TypedEvent
 case class OrderCancelled(orderId: Long, taker: Bytes32String, sellToken: Bytes32String) extends TypedEvent
 case class OrderExecuted(orderId: Long, taker: Bytes32String, sellToken: Bytes32String, sellAmount: BigInt, buyToken: Bytes32String, buyAmount: BigInt, state: Int) extends TypedEvent
@@ -63,8 +63,14 @@ case class SimplePolicyCreated(id: Bytes32String, entityId: Bytes32String) exten
 case class SimplePolicyMatured(id: Bytes32String) extends TypedEvent
 case class SimplePolicyPremiumPaid(id: Bytes32String, amount: BigInt) extends TypedEvent
 case class SupportedTokenAdded(tokenAddress: AddressString) extends TypedEvent
+case class TokenInfoUpdated(objectId: Bytes32String, symbol: String, name: String) extends TypedEvent
+case class TokenizationEnabled(objectId: Bytes32String, symbol: String, name: String) extends TypedEvent
 case class TokenSaleStarted(entityId: Bytes32String, offerId: Long, tokenSymbol: String, tokenName: String) extends TypedEvent
+case class TokenWrapped(id: Bytes32String, wrapper: AddressString) extends TypedEvent
 case class Unsupported(topic: String) extends TypedEvent
+case class UpgradeExpiration(duration: BigInt) extends TypedEvent
+case class UpgradeCancelled(id: Bytes32String, who: AddressString) extends TypedEvent
+
 
 trait EventResolver {
   def getTypedEvent(obj: LogObject): Task[TypedEvent]
@@ -207,6 +213,27 @@ case class EventResolverImpl() extends EventResolver {
       new TypeReference[Address](false) {}      //  sender
     ).asJava),
 
+    new Web3jEventType("MakerBasisPointsUpdated", List(
+      new TypeReference[Uint256](false) {}      // tradingCommissionMakerBP
+    ).asJava),
+
+    new Web3jEventType("MaxDividendDenominationsUpdated", List(
+      new TypeReference[Uint8](false) {},       // oldMax
+      new TypeReference[Uint8](false) {}        // newMax
+    ).asJava),
+
+    new Web3jEventType("ObjectCreated", List(
+      new TypeReference[Bytes32](false) {}, //  objectId
+      new TypeReference[Bytes32](false) {}, //  parentId
+      new TypeReference[Bytes32](false) {}, //  dataHash
+    ).asJava),
+
+    new Web3jEventType("ObjectUpdated", List(
+      new TypeReference[Bytes32](false) {}, //  objectId
+      new TypeReference[Bytes32](false) {}, //  parentId
+      new TypeReference[Bytes32](false) {}, //  dataHash
+    ).asJava),
+
     new Web3jEventType("TokenSaleStarted", List(
       new TypeReference[Bytes32](true) {},      //  entityId
       new TypeReference[Uint256](false) {},     //  offerId
@@ -214,8 +241,25 @@ case class EventResolverImpl() extends EventResolver {
       new TypeReference[Utf8String](false) {}   //  tokenName
     ).asJava),
 
+    new Web3jEventType("TokenWrapped", List(
+      new TypeReference[Bytes32](true) {},      //  entityId
+      new TypeReference[Address](false) {}      //  tokenWrapper
+    ).asJava),
+
     new Web3jEventType("SupportedTokenAdded", List(
       new TypeReference[Address](false) {}      //  tokenAddress, current sepolia deploy had this flag set to: false
+    ).asJava),
+
+    new Web3jEventType("TokenInfoUpdated", List(
+      new TypeReference[Bytes32](true) {},      //  objectId
+      new TypeReference[Utf8String](false) {},  //  symbol
+      new TypeReference[Utf8String](false) {}   //  name
+    ).asJava),
+
+    new Web3jEventType("TokenizationEnabled", List(
+      new TypeReference[Bytes32](false) {},     //  objectId
+      new TypeReference[Utf8String](false) {},  //  symbol
+      new TypeReference[Utf8String](false) {}   //  name
     ).asJava),
 
     new Web3jEventType("OwnershipTransferred", List(
@@ -225,6 +269,15 @@ case class EventResolverImpl() extends EventResolver {
 
     new Web3jEventType("InitializeDiamond", List(
       new TypeReference[Address](false) {}      // sender
+    ).asJava),
+
+    new Web3jEventType("UpdateUpgradeExpiration", List(
+      new TypeReference[Uint256](false) {}      // duration
+    ).asJava),
+    
+    new Web3jEventType("UpgradeCancelled", List(
+      new TypeReference[Bytes32](false) {},       // id
+      new TypeReference[Address](false) {}        // who
     ).asJava)
 
   ).map { event =>
@@ -273,6 +326,10 @@ case class EventResolverImpl() extends EventResolver {
                 tokenSymbol = decodedAttrs.asJava.get(2).asInstanceOf[Utf8String].getValue,
                 tokenName = decodedAttrs.asJava.get(3).asInstanceOf[Utf8String].getValue
               )
+            case "TokenWrapped" => TokenWrapped(
+              id = decodedAttrs.asJava.get(0).asInstanceOf[Bytes32],
+              wrapper = decodedAttrs.asJava.get(1).asInstanceOf[Address].getValue
+            )
             case "SimplePolicyCreated" =>
               SimplePolicyCreated(
                 id = decodedAttrs.asJava.get(0).asInstanceOf[Bytes32],
@@ -334,6 +391,16 @@ case class EventResolverImpl() extends EventResolver {
               )
             case "SupportedTokenAdded" =>
               SupportedTokenAdded(tokenAddress = decodedAttrs.asJava.get(0).getValue.toString)
+            case "TokenInfoUpdated" => TokenInfoUpdated(
+              objectId = decodedAttrs.asJava.get(0).asInstanceOf[Bytes32],
+              symbol = decodedAttrs.asJava.get(1).asInstanceOf[Utf8String].getValue,
+              name = decodedAttrs.asJava.get(2).asInstanceOf[Utf8String].getValue
+            )
+            case "TokenizationEnabled" => TokenizationEnabled(
+              objectId = decodedAttrs.asJava.get(0).asInstanceOf[Bytes32],
+              symbol = decodedAttrs.asJava.get(1).asInstanceOf[Utf8String].getValue,
+              name = decodedAttrs.asJava.get(2).asInstanceOf[Utf8String].getValue
+            )
             case "OrderAdded" =>
               OrderAdded(
                 orderId = decodedAttrs.asJava.get(0).asInstanceOf[Uint256].getValue.longValueExact,
@@ -377,6 +444,24 @@ case class EventResolverImpl() extends EventResolver {
                 funcName = decodedAttrs.asJava.get(2).getValue.toString,
                 sender = decodedAttrs.asJava.get(3).getValue.toString
               )
+            case "MakerBasisPointsUpdated" => MakerBasisPointsUpdated(
+              tradingCommissionMakerBP = decodedAttrs.asJava.get(1).asInstanceOf[Uint256].getValue.intValue()
+            )
+            case "MaxDividendDenominationsUpdated" => MaxDividendDenominationsUpdated(
+              oldMax = decodedAttrs.asJava.get(0).asInstanceOf[Uint8].getValue.intValue(),
+              newMax = decodedAttrs.asJava.get(1).asInstanceOf[Uint8].getValue.intValue()
+            )
+            case "ObjectCreated" =>
+              ObjectCreated(
+                objectId = decodedAttrs.asJava.get(0).asInstanceOf[Bytes32],
+                parentId = decodedAttrs.asJava.get(1).asInstanceOf[Bytes32],
+                hash = decodedAttrs.asJava.get(2).asInstanceOf[Bytes32]
+              )
+            case "ObjectUpdated" => ObjectUpdated(
+              objectId = decodedAttrs.asJava.get(0).asInstanceOf[Bytes32],
+              parentId = decodedAttrs.asJava.get(1).asInstanceOf[Bytes32],
+              hash = decodedAttrs.asJava.get(2).asInstanceOf[Bytes32]
+            )
             case "OwnershipTransferred" =>
               OwnershipTransferred(
                 previousOwner = decodedAttrs.asJava.get(0).getValue.toString,
@@ -384,6 +469,13 @@ case class EventResolverImpl() extends EventResolver {
               )
             case "InitializeDiamond" =>
               InitializeDiamond(sender = decodedAttrs.asJava.get(0).getValue.toString)
+            case "UpgradeExpiration" => UpgradeExpiration(
+              duration = decodedAttrs.asJava.get(0).asInstanceOf[Uint256].getValue
+            )
+            case "UpgradeCancelled" => UpgradeCancelled(
+              id = decodedAttrs.asJava.get(0).asInstanceOf[Bytes32],
+              who = decodedAttrs.asJava.get(1).asInstanceOf[Address].getValue
+            )
             case _ => Unsupported(eventName)
         case None => Unsupported(topic)
       }
