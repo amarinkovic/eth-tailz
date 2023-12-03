@@ -10,10 +10,19 @@ import zio.{Task, ZIO, ZLayer}
 import java.math.BigInteger
 import scala.jdk.CollectionConverters.*
 
+import io.mankea.eth.streamer.service.EventTypes
+import scala.Conversion
+
 type Web3jEventType = Event
 
 given Conversion[BigInteger, BigInt] = BigInt(_)
+given Conversion[BigInteger, Int] = BigInt(_).intValue
 given Conversion[Bytes32, Bytes32String] = b => Numeric.toHexString(b.getValue)
+given Conversion[Utf8String, String] = _.getValue();
+given Conversion[Uint256, BigInt] = _.getValue()
+given Conversion[Uint256, Int] = _.getValue().intValueExact()
+given Conversion[Uint256, Long] = _.getValue().longValueExact()
+given Conversion[Bool, Boolean] = _.getValue()
 
 opaque type Bytes32String <: String = String
 object Bytes32String {
@@ -31,7 +40,7 @@ object AddressString {
 
 sealed trait TypedEvent
 
-case class CollateralRatioUpdated(entityId: Bytes32String, collateralRatio: Int, utilizedCapacity: BigInt) extends TypedEvent
+case class CollateralRatioUpdated(entityId: Bytes32String, collateralRatio: BigInt, utilizedCapacity: BigInt) extends TypedEvent
 case class CreateUpgrade(id: Bytes32String, who: AddressString) extends TypedEvent
 //event DiamondCut(FacetCut[] _diamondCut, address _init, bytes _calldata);
 //event DiamondCut(IDiamondCut.FacetCut[] diamondCut, address init, bytes _calldata);
@@ -78,407 +87,197 @@ trait EventResolver {
 
 case class EventResolverImpl() extends EventResolver {
 
-  private val evenTypes: Map[String, Web3jEventType] = List(
-    new Web3jEventType("CollateralRatioUpdated", List(
-      new TypeReference[Bytes32](true) {},  //  entityId
-      new TypeReference[Uint256](false) {}, //  collateralRatio
-      new TypeReference[Uint256](false) {}  //  utilizedCapacity
-    ).asJava),
-
-    new Web3jEventType("CreateUpgrade", List(
-      new TypeReference[Bytes32](false) {}, //  id
-      new TypeReference[Address](true) {}   //  who
-    ).asJava),
-
-    new Web3jEventType("DividendDistribution", List(
-      new TypeReference[Bytes32](true) {}, //  guid
-      new TypeReference[Bytes32](false) {}, //  from
-      new TypeReference[Bytes32](false) {}, //  to
-      new TypeReference[Bytes32](false) {}, //  dividendTokenId
-      new TypeReference[Uint256](false) {} //  amount
-    ).asJava),
-
-    new Web3jEventType("DividendWithdrawn", List(
-      new TypeReference[Bytes32](true) {}, //  accountId
-      new TypeReference[Bytes32](false) {}, //  tokenId
-      new TypeReference[Uint256](false) {}, //  amountOwned
-      new TypeReference[Bytes32](false) {}, //  dividendTokenId
-      new TypeReference[Uint256](false) {} //  dividendAmountWithdrawn
-    ).asJava),
-
-    new Web3jEventType("EntityCreated", List(
-      new TypeReference[Bytes32](true) {},      //  entityId
-      new TypeReference[Bytes32](false) {}      //  entityAdmin
-    ).asJava),
-
-    new Web3jEventType("EntityUpdated", List(
-      new TypeReference[Bytes32](true) {}       //  entityId
-    ).asJava),
-
-    new Web3jEventType("FeePaid", List(
-      new TypeReference[Bytes32](true) {},  //  fromId
-      new TypeReference[Bytes32](true) {},  //  toId
-      new TypeReference[Bytes32](false) {}, //  tokenId
-      new TypeReference[Uint256](false) {}, //  amount
-      new TypeReference[Uint256](false) {}  //  feeType // 1.premium, 2. trading, 3. initial token sale
-    ).asJava),
-
-    new Web3jEventType("InitializeDiamond", List(
-      new TypeReference[Address](false) {}      // sender
-    ).asJava),
-
-    new Web3jEventType("RoleUpdated", List(
-      new TypeReference[Bytes32](true) {},      //  objectId
-      new TypeReference[Bytes32](false) {},     //  contextId
-      new TypeReference[Bytes32](false) {},     //  roleId
-      new TypeReference[Utf8String](false) {}   //  functionName
-    ).asJava),
-
-    new Web3jEventType("RoleGroupUpdated", List(
-      new TypeReference[Utf8String](false) {},  //  role
-      new TypeReference[Utf8String](false) {},  //  group
-      new TypeReference[Bool](false) {}         //  roleInGroup
-    ).asJava),
-
-    new Web3jEventType("RoleCanAssignUpdated", List(
-      new TypeReference[Utf8String](false) {},  // role
-      new TypeReference[Utf8String](false) {}   // group
-    ).asJava),
-
-    new Web3jEventType("OrderAdded", List(
-      new TypeReference[Uint256](true) {},      //  orderId
-      new TypeReference[Bytes32](true) {},      //  maker
-      new TypeReference[Bytes32](true) {},      //  sellToken
-      new TypeReference[Uint256](false) {},     //  sellAmount
-      new TypeReference[Uint256](false) {},     //  sellAmountInitial
-      new TypeReference[Bytes32](false) {},     //  buyToken
-      new TypeReference[Uint256](false) {},     //  buyAmount
-      new TypeReference[Uint256](false) {},     //  buyAmountInitial
-      new TypeReference[Uint256](false) {}      //  state
-    ).asJava),
-
-    new Web3jEventType("OrderExecuted", List(
-      new TypeReference[Uint256](true) {},      //  orderId
-      new TypeReference[Bytes32](true) {},      //  taker
-      new TypeReference[Bytes32](true) {},      //  sellToken
-      new TypeReference[Uint256](false) {},     //  sellAmount
-      new TypeReference[Bytes32](false) {},     //  buyToken
-      new TypeReference[Uint256](false) {},     //  buyAmount
-      new TypeReference[Uint256](false) {}      //  state
-    ).asJava),
-
-    new Web3jEventType("OrderCancelled", List(
-      new TypeReference[Uint256](true) {},      //  orderId
-      new TypeReference[Bytes32](true) {},      //  taker
-      new TypeReference[Bytes32](false) {}      //  sellToken
-    ).asJava),
-
-    new Web3jEventType("SimplePolicyCreated", List(
-      new TypeReference[Bytes32](true) {},      //  policyId
-      new TypeReference[Bytes32](false) {}      //  entityId
-    ).asJava),
-
-    new Web3jEventType("SimplePolicyPremiumPaid", List(
-      new TypeReference[Bytes32](true) {},      //  policyId
-      new TypeReference[Uint256](false) {}      //  amount
-    ).asJava),
-
-    new Web3jEventType("SimplePolicyClaimPaid", List(
-      new TypeReference[Bytes32](true) {},      //  claimId
-      new TypeReference[Bytes32](true) {},      //  policyId
-      new TypeReference[Bytes32](true) {},      //  insuredId
-      new TypeReference[Uint256](false) {}      //  amount
-    ).asJava),
-
-    new Web3jEventType("SimplePolicyMatured", List(
-      new TypeReference[Bytes32](true) {}       //  policyId
-    ).asJava),
-
-    new Web3jEventType("SimplePolicyCancelled", List(
-      new TypeReference[Bytes32](true) {}       //  policyId
-    ).asJava),
-
-    new Web3jEventType("InternalTokenBalanceUpdate", List(
-      new TypeReference[Bytes32](true) {},      //  ownerId
-      new TypeReference[Bytes32](false) {},     //  tokenId
-      new TypeReference[Uint256](false) {},     //  newAmount
-      new TypeReference[Utf8String](false) {},  //  functionName
-      new TypeReference[Address](false) {}      //  sender
-    ).asJava),
-
-    new Web3jEventType("InternalTokenSupplyUpdate", List(
-      new TypeReference[Bytes32](true) {},      //  tokenId
-      new TypeReference[Uint256](false) {},     //  newTokenSupply
-      new TypeReference[Utf8String](false) {},  //  functionName
-      new TypeReference[Address](false) {}      //  sender
-    ).asJava),
-
-    new Web3jEventType("MakerBasisPointsUpdated", List(
-      new TypeReference[Uint256](false) {}      // tradingCommissionMakerBP
-    ).asJava),
-
-    new Web3jEventType("MaxDividendDenominationsUpdated", List(
-      new TypeReference[Uint8](false) {},       // oldMax
-      new TypeReference[Uint8](false) {}        // newMax
-    ).asJava),
-
-    new Web3jEventType("ObjectCreated", List(
-      new TypeReference[Bytes32](false) {}, //  objectId
-      new TypeReference[Bytes32](false) {}, //  parentId
-      new TypeReference[Bytes32](false) {}, //  dataHash
-    ).asJava),
-
-    new Web3jEventType("ObjectUpdated", List(
-      new TypeReference[Bytes32](false) {}, //  objectId
-      new TypeReference[Bytes32](false) {}, //  parentId
-      new TypeReference[Bytes32](false) {}, //  dataHash
-    ).asJava),
-
-    new Web3jEventType("TokenSaleStarted", List(
-      new TypeReference[Bytes32](true) {},      //  entityId
-      new TypeReference[Uint256](false) {},     //  offerId
-      new TypeReference[Utf8String](false) {},  //  tokenSymbol
-      new TypeReference[Utf8String](false) {}   //  tokenName
-    ).asJava),
-
-    new Web3jEventType("TokenWrapped", List(
-      new TypeReference[Bytes32](true) {},      //  entityId
-      new TypeReference[Address](false) {}      //  tokenWrapper
-    ).asJava),
-
-    new Web3jEventType("SupportedTokenAdded", List(
-      new TypeReference[Address](false) {}      //  tokenAddress, current sepolia deploy had this flag set to: false
-    ).asJava),
-
-    new Web3jEventType("TokenInfoUpdated", List(
-      new TypeReference[Bytes32](true) {},      //  objectId
-      new TypeReference[Utf8String](false) {},  //  symbol
-      new TypeReference[Utf8String](false) {}   //  name
-    ).asJava),
-
-    new Web3jEventType("TokenizationEnabled", List(
-      new TypeReference[Bytes32](false) {},     //  objectId
-      new TypeReference[Utf8String](false) {},  //  symbol
-      new TypeReference[Utf8String](false) {}   //  name
-    ).asJava),
-
-    new Web3jEventType("OwnershipTransferred", List(
-      new TypeReference[Address](true) {},      //  previous owner
-      new TypeReference[Address](true) {}       //  new owner
-    ).asJava),
-
-    new Web3jEventType("InitializeDiamond", List(
-      new TypeReference[Address](false) {}      // sender
-    ).asJava),
-
-    new Web3jEventType("UpdateUpgradeExpiration", List(
-      new TypeReference[Uint256](false) {}      // duration
-    ).asJava),
-    
-    new Web3jEventType("UpgradeCancelled", List(
-      new TypeReference[Bytes32](false) {},       // id
-      new TypeReference[Address](false) {}        // who
-    ).asJava)
-
-  ).map { event =>
-    (EventEncoder.encode(event), event)
-  }.toMap
-
-  private def getName(topic: String): String = evenTypes.get(topic).map(_.getName).getOrElse(topic)
+  private def getName(topic: String): String = Option(EventTypes.getByHash(topic)).map(_.getName).getOrElse(topic)
 
   def getTypedEvent(obj: LogObject): Task[TypedEvent] = {
+
     val topic = obj.getTopics.get(0)
-    val eventName = getName(topic)
 
     ZIO.attempt {
-      evenTypes.get(topic).map(t => decode(obj, t)) match {
-        case Some(decodedAttrs) =>
-          eventName match
-            case "CollateralRatioUpdated" =>
-              CollateralRatioUpdated(
-                entityId = decodedAttrs.asJava.get(0).asInstanceOf[Bytes32],
-                collateralRatio = decodedAttrs.asJava.get(1).asInstanceOf[Uint256].getValue.intValue,
-                utilizedCapacity = decodedAttrs.asJava.get(2).asInstanceOf[Uint256].getValue
-              )
-            case "CreateUpgrade" => CreateUpgrade(
-              id = decodedAttrs.asJava.get(0).asInstanceOf[Bytes32],
-              who = decodedAttrs.asJava.get(1).asInstanceOf[Address].getValue
+        getName(topic) match
+          case "CollateralRatioUpdated" =>
+            CollateralRatioUpdated(
+              entityId = NaymsDiamond.getCollateralRatioUpdatedEventFromLog(obj).entityId,
+              collateralRatio = NaymsDiamond.getCollateralRatioUpdatedEventFromLog(obj).collateralRatio,
+              utilizedCapacity = NaymsDiamond.getCollateralRatioUpdatedEventFromLog(obj).utilizedCapacity
             )
-            case "DividendDistribution" =>
-              DividendDistribution(
-                guid = decodedAttrs.asJava.get(0).asInstanceOf[Bytes32],
-                from = decodedAttrs.asJava.get(1).asInstanceOf[Bytes32],
-                to = decodedAttrs.asJava.get(2).asInstanceOf[Bytes32],
-                dividendTokenId = decodedAttrs.asJava.get(3).asInstanceOf[Bytes32],
-                amount = decodedAttrs.asJava.get(4).asInstanceOf[Uint256].getValue
-              )
-            case "DividendWithdrawn" => DividendWithdrawn(
-              accountId = decodedAttrs.asJava.get(0).asInstanceOf[Bytes32],
-              tokenId = decodedAttrs.asJava.get(1).asInstanceOf[Bytes32],
-              amountOwned = decodedAttrs.asJava.get(2).asInstanceOf[Uint256].getValue,
-              dividendTokenId = decodedAttrs.asJava.get(3).asInstanceOf[Bytes32],
-              dividendAmountWithdrawn = decodedAttrs.asJava.get(4).asInstanceOf[Uint256].getValue
+          case "CreateUpgrade" => CreateUpgrade(
+            id = NaymsDiamond.getCreateUpgradeEventFromLog(obj).id,
+            who = NaymsDiamond.getCreateUpgradeEventFromLog(obj).who.getValue()
+          )
+          case "DividendDistribution" =>
+            DividendDistribution(
+              guid = NaymsDiamond.getDividendDistributionEventFromLog(obj).guid,
+              from = NaymsDiamond.getDividendDistributionEventFromLog(obj).from,
+              to = NaymsDiamond.getDividendDistributionEventFromLog(obj).to,
+              dividendTokenId = NaymsDiamond.getDividendDistributionEventFromLog(obj).dividendTokenId,
+              amount = NaymsDiamond.getDividendDistributionEventFromLog(obj).amount
             )
-            case "TokenSaleStarted" =>
-              TokenSaleStarted(
-                entityId = decodedAttrs.asJava.get(0).asInstanceOf[Bytes32],
-                offerId = decodedAttrs.asJava.get(1).asInstanceOf[Uint256].getValue.longValueExact,
-                tokenSymbol = decodedAttrs.asJava.get(2).asInstanceOf[Utf8String].getValue,
-                tokenName = decodedAttrs.asJava.get(3).asInstanceOf[Utf8String].getValue
-              )
-            case "TokenWrapped" => TokenWrapped(
-              id = decodedAttrs.asJava.get(0).asInstanceOf[Bytes32],
-              wrapper = decodedAttrs.asJava.get(1).asInstanceOf[Address].getValue
+          case "DividendWithdrawn" => DividendWithdrawn(
+            accountId = NaymsDiamond.getDividendWithdrawnEventFromLog(obj).accountId,
+            tokenId = NaymsDiamond.getDividendWithdrawnEventFromLog(obj).tokenId,
+            amountOwned = NaymsDiamond.getDividendWithdrawnEventFromLog(obj).amountOwned,
+            dividendTokenId = NaymsDiamond.getDividendWithdrawnEventFromLog(obj).dividendTokenId,
+            dividendAmountWithdrawn = NaymsDiamond.getDividendWithdrawnEventFromLog(obj).dividendAmountWithdrawn
+          )
+          case "TokenSaleStarted" =>
+            TokenSaleStarted(
+              entityId = NaymsDiamond.getTokenSaleStartedEventFromLog(obj).entityId,
+              offerId = NaymsDiamond.getTokenSaleStartedEventFromLog(obj).offerId,
+              tokenSymbol = NaymsDiamond.getTokenSaleStartedEventFromLog(obj).tokenSymbol,
+              tokenName = NaymsDiamond.getTokenSaleStartedEventFromLog(obj).tokenName
             )
-            case "SimplePolicyCreated" =>
-              SimplePolicyCreated(
-                id = decodedAttrs.asJava.get(0).asInstanceOf[Bytes32],
-                entityId = decodedAttrs.asJava.get(1).asInstanceOf[Bytes32]
-              )
-            case "SimplePolicyPremiumPaid" =>
-              SimplePolicyPremiumPaid(
-                id = decodedAttrs.asJava.get(0).asInstanceOf[Bytes32],
-                amount = decodedAttrs.asJava.get(1).asInstanceOf[Uint256].getValue
-              )
-            case "SimplePolicyClaimPaid" =>
-              SimplePolicyClaimPaid(
-                claimId = decodedAttrs.asJava.get(0).asInstanceOf[Bytes32],
-                policyId = decodedAttrs.asJava.get(1).asInstanceOf[Bytes32],
-                insuredId = decodedAttrs.asJava.get(2).asInstanceOf[Bytes32],
-                amount = decodedAttrs.asJava.get(3).asInstanceOf[Uint256].getValue
-              )
-            case "SimplePolicyMatured" =>
-              SimplePolicyMatured(
-                id = decodedAttrs.asJava.get(0).asInstanceOf[Bytes32]
-              )
-            case "SimplePolicyCancelled" =>
-              SimplePolicyCancelled(
-                id = decodedAttrs.asJava.get(0).asInstanceOf[Bytes32]
-              )
-            case "EntityCreated" =>
-              EntityCreated(
-                entityId = decodedAttrs.asJava.get(0).asInstanceOf[Bytes32],
-                entityAdmin = decodedAttrs.asJava.get(1).asInstanceOf[Bytes32]
-              )
-            case "EntityUpdated" =>
-              EntityUpdated(
-                entityId = decodedAttrs.asJava.get(0).asInstanceOf[Bytes32]
-              )
-            case "FeePaid" => FeePaid(
-              fromId = decodedAttrs.asJava.get(0).asInstanceOf[Bytes32],
-              toId = decodedAttrs.asJava.get(1).asInstanceOf[Bytes32],
-              tokenId = decodedAttrs.asJava.get(2).asInstanceOf[Bytes32],
-              amount = decodedAttrs.asJava.get(3).asInstanceOf[Uint256].getValue,
-              feeType = decodedAttrs.asJava.get(4).asInstanceOf[Uint256].getValue.intValue(),
+          case "TokenWrapped" => TokenWrapped(
+            id = NaymsDiamond.getTokenWrappedEventFromLog(obj).entityId,
+            wrapper = NaymsDiamond.getTokenWrappedEventFromLog(obj).tokenWrapper.getValue()
+          )
+          case "SimplePolicyCreated" =>
+            SimplePolicyCreated(
+              id = NaymsDiamond.getSimplePolicyCreatedEventFromLog(obj).id,
+              entityId = NaymsDiamond.getSimplePolicyCreatedEventFromLog(obj).entityId
             )
-            case "RoleUpdated" =>
-              RoleUpdated(
-                objectId = decodedAttrs.asJava.get(0).asInstanceOf[Bytes32],
-                contextId = decodedAttrs.asJava.get(1).asInstanceOf[Bytes32],
-                roleId = decodedAttrs.asJava.get(2).asInstanceOf[Bytes32],
-                funcName = decodedAttrs.asJava.get(3).asInstanceOf[Utf8String].getValue
-              )
-            case "RoleGroupUpdated" =>
-              RoleGroupUpdated(
-                role = decodedAttrs.asJava.get(0).asInstanceOf[Utf8String].getValue,
-                group = decodedAttrs.asJava.get(1).asInstanceOf[Utf8String].getValue,
-                roleInGroup = decodedAttrs.asJava.get(2).asInstanceOf[Bool].getValue
-              )
-            case "RoleCanAssignUpdated" =>
-              RoleCanAssignUpdated(
-                role = decodedAttrs.asJava.get(0).getValue.toString,
-                group = decodedAttrs.asJava.get(1).getValue.toString
-              )
-            case "SupportedTokenAdded" =>
-              SupportedTokenAdded(tokenAddress = decodedAttrs.asJava.get(0).getValue.toString)
-            case "TokenInfoUpdated" => TokenInfoUpdated(
-              objectId = decodedAttrs.asJava.get(0).asInstanceOf[Bytes32],
-              symbol = decodedAttrs.asJava.get(1).asInstanceOf[Utf8String].getValue,
-              name = decodedAttrs.asJava.get(2).asInstanceOf[Utf8String].getValue
+          case "SimplePolicyPremiumPaid" =>
+            SimplePolicyPremiumPaid(
+              id = NaymsDiamond.getSimplePolicyPremiumPaidEventFromLog(obj).id,
+              amount = NaymsDiamond.getSimplePolicyPremiumPaidEventFromLog(obj).amount
             )
-            case "TokenizationEnabled" => TokenizationEnabled(
-              objectId = decodedAttrs.asJava.get(0).asInstanceOf[Bytes32],
-              symbol = decodedAttrs.asJava.get(1).asInstanceOf[Utf8String].getValue,
-              name = decodedAttrs.asJava.get(2).asInstanceOf[Utf8String].getValue
+          case "SimplePolicyClaimPaid" =>
+            SimplePolicyClaimPaid(
+              claimId = NaymsDiamond.getSimplePolicyClaimPaidEventFromLog(obj)._claimId,
+              policyId = NaymsDiamond.getSimplePolicyClaimPaidEventFromLog(obj).policyId,
+              insuredId = NaymsDiamond.getSimplePolicyClaimPaidEventFromLog(obj).insuredId,
+              amount = NaymsDiamond.getSimplePolicyClaimPaidEventFromLog(obj).amount
             )
-            case "OrderAdded" =>
-              OrderAdded(
-                orderId = decodedAttrs.asJava.get(0).asInstanceOf[Uint256].getValue.longValueExact,
-                maker = decodedAttrs.asJava.get(1).asInstanceOf[Bytes32],
-                sellToken = decodedAttrs.asJava.get(2).asInstanceOf[Bytes32],
-                sellAmount = decodedAttrs.asJava.get(3).asInstanceOf[Uint256].getValue,
-                sellAmountInitial = decodedAttrs.asJava.get(4).asInstanceOf[Uint256].getValue,
-                buyToken = decodedAttrs.asJava.get(5).asInstanceOf[Bytes32],
-                buyAmount = decodedAttrs.asJava.get(6).asInstanceOf[Uint256].getValue,
-                buyAmountInitial = decodedAttrs.asJava.get(7).asInstanceOf[Uint256].getValue,
-                state = decodedAttrs.asJava.get(8).asInstanceOf[Uint256].getValue.longValueExact.toInt
-              )
-            case "OrderExecuted" =>
-              OrderExecuted(
-                orderId = decodedAttrs.asJava.get(0).asInstanceOf[Uint256].getValue.longValueExact,
-                taker = decodedAttrs.asJava.get(1).asInstanceOf[Bytes32],
-                sellToken = decodedAttrs.asJava.get(2).asInstanceOf[Bytes32],
-                sellAmount = decodedAttrs.asJava.get(3).asInstanceOf[Uint256].getValue,
-                buyToken = decodedAttrs.asJava.get(4).asInstanceOf[Bytes32],
-                buyAmount = decodedAttrs.asJava.get(5).asInstanceOf[Uint256].getValue,
-                state = decodedAttrs.asJava.get(6).asInstanceOf[Uint256].getValue.longValueExact.toInt
-              )
-            case "OrderCancelled" =>
-              OrderCancelled(
-                orderId = decodedAttrs.asJava.get(0).asInstanceOf[Uint256].getValue.longValueExact,
-                taker = decodedAttrs.asJava.get(1).asInstanceOf[Bytes32],
-                sellToken = decodedAttrs.asJava.get(2).asInstanceOf[Bytes32]
-              )
-            case "InternalTokenBalanceUpdate" =>
-              InternalTokenBalanceUpdate(
-                ownerId = decodedAttrs.asJava.get(0).asInstanceOf[Bytes32],
-                tokenId = decodedAttrs.asJava.get(1).asInstanceOf[Bytes32],
-                newAmount = decodedAttrs.asJava.get(2).asInstanceOf[Uint256].getValue,
-                funcName = decodedAttrs.asJava.get(3).getValue.toString,
-                sender = decodedAttrs.asJava.get(4).getValue.toString
-              )
-            case "InternalTokenSupplyUpdate" =>
-              InternalTokenSupplyUpdate(
-                tokenId = decodedAttrs.asJava.get(0).asInstanceOf[Bytes32],
-                newTokenSupply = decodedAttrs.asJava.get(1).asInstanceOf[Uint256].getValue,
-                funcName = decodedAttrs.asJava.get(2).getValue.toString,
-                sender = decodedAttrs.asJava.get(3).getValue.toString
-              )
-            case "MakerBasisPointsUpdated" => MakerBasisPointsUpdated(
-              tradingCommissionMakerBP = decodedAttrs.asJava.get(1).asInstanceOf[Uint256].getValue.intValue()
+          case "SimplePolicyMatured" =>
+            SimplePolicyMatured(
+              id = NaymsDiamond.getSimplePolicyMaturedEventFromLog(obj).id
             )
-            case "MaxDividendDenominationsUpdated" => MaxDividendDenominationsUpdated(
-              oldMax = decodedAttrs.asJava.get(0).asInstanceOf[Uint8].getValue.intValue(),
-              newMax = decodedAttrs.asJava.get(1).asInstanceOf[Uint8].getValue.intValue()
+          case "SimplePolicyCancelled" =>
+            SimplePolicyCancelled(
+              id = NaymsDiamond.getSimplePolicyCancelledEventFromLog(obj).id
             )
-            case "ObjectCreated" =>
-              ObjectCreated(
-                objectId = decodedAttrs.asJava.get(0).asInstanceOf[Bytes32],
-                parentId = decodedAttrs.asJava.get(1).asInstanceOf[Bytes32],
-                hash = decodedAttrs.asJava.get(2).asInstanceOf[Bytes32]
-              )
-            case "ObjectUpdated" => ObjectUpdated(
-              objectId = decodedAttrs.asJava.get(0).asInstanceOf[Bytes32],
-              parentId = decodedAttrs.asJava.get(1).asInstanceOf[Bytes32],
-              hash = decodedAttrs.asJava.get(2).asInstanceOf[Bytes32]
+          case "EntityCreated" =>
+            EntityCreated(
+              entityId = NaymsDiamond.getEntityCreatedEventFromLog(obj).entityId,
+              entityAdmin = NaymsDiamond.getEntityCreatedEventFromLog(obj).entityAdmin
             )
-            case "OwnershipTransferred" =>
-              OwnershipTransferred(
-                previousOwner = decodedAttrs.asJava.get(0).getValue.toString,
-                newOwner = decodedAttrs.asJava.get(1).getValue.toString
-              )
-            case "InitializeDiamond" =>
-              InitializeDiamond(sender = decodedAttrs.asJava.get(0).getValue.toString)
-            case "UpgradeExpiration" => UpgradeExpiration(
-              duration = decodedAttrs.asJava.get(0).asInstanceOf[Uint256].getValue
+          case "EntityUpdated" =>
+            EntityUpdated(
+              entityId = NaymsDiamond.getEntityUpdatedEventFromLog(obj).entityId
             )
-            case "UpgradeCancelled" => UpgradeCancelled(
-              id = decodedAttrs.asJava.get(0).asInstanceOf[Bytes32],
-              who = decodedAttrs.asJava.get(1).asInstanceOf[Address].getValue
+          case "FeePaid" => FeePaid(
+            fromId = NaymsDiamond.getFeePaidEventFromLog(obj).fromId,
+            toId = NaymsDiamond.getFeePaidEventFromLog(obj).toId,
+            tokenId = NaymsDiamond.getFeePaidEventFromLog(obj).tokenId,
+            amount = NaymsDiamond.getFeePaidEventFromLog(obj).amount,
+            feeType = NaymsDiamond.getFeePaidEventFromLog(obj).feeType,
+          )
+          case "RoleUpdated" =>
+            RoleUpdated(
+              objectId = NaymsDiamond.getRoleUpdatedEventFromLog(obj).objectId,
+              contextId = NaymsDiamond.getRoleUpdatedEventFromLog(obj).contextId,
+              roleId = NaymsDiamond.getRoleUpdatedEventFromLog(obj).assignedRoleId,
+              funcName = NaymsDiamond.getRoleUpdatedEventFromLog(obj).functionName
             )
-            case _ => Unsupported(eventName)
-        case None => Unsupported(topic)
-      }
+          case "RoleGroupUpdated" =>
+            RoleGroupUpdated(
+              role = NaymsDiamond.getRoleGroupUpdatedEventFromLog(obj).role,
+              group = NaymsDiamond.getRoleGroupUpdatedEventFromLog(obj).group,
+              roleInGroup = NaymsDiamond.getRoleGroupUpdatedEventFromLog(obj).roleInGroup
+            )
+          case "RoleCanAssignUpdated" =>
+            RoleCanAssignUpdated(
+              role = NaymsDiamond.getRoleCanAssignUpdatedEventFromLog(obj).role,
+              group = NaymsDiamond.getRoleCanAssignUpdatedEventFromLog(obj).group
+            )
+          case "SupportedTokenAdded" =>
+            SupportedTokenAdded(tokenAddress = NaymsDiamond.getSupportedTokenAddedEventFromLog(obj).tokenAddress.getValue)
+          case "TokenInfoUpdated" => TokenInfoUpdated(
+            objectId = NaymsDiamond.getTokenInfoUpdatedEventFromLog(obj).objectId,
+            symbol = NaymsDiamond.getTokenInfoUpdatedEventFromLog(obj).symbol,
+            name = NaymsDiamond.getTokenInfoUpdatedEventFromLog(obj).name
+          )
+          case "TokenizationEnabled" => TokenizationEnabled(
+            objectId = NaymsDiamond.getTokenInfoUpdatedEventFromLog(obj).objectId,
+            symbol = NaymsDiamond.getTokenInfoUpdatedEventFromLog(obj).symbol,
+            name = NaymsDiamond.getTokenInfoUpdatedEventFromLog(obj).name
+          )
+          case "OrderAdded" =>
+            OrderAdded(
+              orderId = NaymsDiamond.getOrderAddedEventFromLog(obj).orderId,
+              maker = NaymsDiamond.getOrderAddedEventFromLog(obj).maker,
+              sellToken = NaymsDiamond.getOrderAddedEventFromLog(obj).sellToken,
+              sellAmount = NaymsDiamond.getOrderAddedEventFromLog(obj).sellAmount,
+              sellAmountInitial = NaymsDiamond.getOrderAddedEventFromLog(obj).sellAmountInitial,
+              buyToken = NaymsDiamond.getOrderAddedEventFromLog(obj).buyToken,
+              buyAmount = NaymsDiamond.getOrderAddedEventFromLog(obj).buyAmount,
+              buyAmountInitial = NaymsDiamond.getOrderAddedEventFromLog(obj).buyAmountInitial,
+              state = NaymsDiamond.getOrderAddedEventFromLog(obj).state
+            )
+          case "OrderExecuted" =>
+            OrderExecuted(
+              orderId = NaymsDiamond.getOrderExecutedEventFromLog(obj).orderId,
+              taker = NaymsDiamond.getOrderExecutedEventFromLog(obj).taker,
+              sellToken = NaymsDiamond.getOrderExecutedEventFromLog(obj).sellToken,
+              sellAmount = NaymsDiamond.getOrderExecutedEventFromLog(obj).sellAmount,
+              buyToken = NaymsDiamond.getOrderExecutedEventFromLog(obj).buyToken,
+              buyAmount = NaymsDiamond.getOrderExecutedEventFromLog(obj).buyAmount,
+              state = NaymsDiamond.getOrderExecutedEventFromLog(obj).state
+            )
+          case "OrderCancelled" =>
+            OrderCancelled(
+              orderId = NaymsDiamond.getOrderExecutedEventFromLog(obj).orderId,
+              taker = NaymsDiamond.getOrderExecutedEventFromLog(obj).taker,
+              sellToken = NaymsDiamond.getOrderExecutedEventFromLog(obj).sellToken
+            )
+          case "InternalTokenBalanceUpdate" =>
+            InternalTokenBalanceUpdate(
+              ownerId = NaymsDiamond.getInternalTokenBalanceUpdateEventFromLog(obj).ownerId,
+              tokenId = NaymsDiamond.getInternalTokenBalanceUpdateEventFromLog(obj).tokenId,
+              newAmount = NaymsDiamond.getInternalTokenBalanceUpdateEventFromLog(obj).newAmountOwned,
+              funcName = NaymsDiamond.getInternalTokenBalanceUpdateEventFromLog(obj).functionName,
+              sender = NaymsDiamond.getInternalTokenBalanceUpdateEventFromLog(obj).msgSender.getValue()
+            )
+          case "InternalTokenSupplyUpdate" =>
+            InternalTokenSupplyUpdate(
+              tokenId = NaymsDiamond.getInternalTokenSupplyUpdateEventFromLog(obj).tokenId,
+              newTokenSupply = NaymsDiamond.getInternalTokenSupplyUpdateEventFromLog(obj).newTokenSupply,
+              funcName = NaymsDiamond.getInternalTokenSupplyUpdateEventFromLog(obj).functionName,
+              sender = NaymsDiamond.getInternalTokenSupplyUpdateEventFromLog(obj).msgSender.getValue()
+            )
+          case "MakerBasisPointsUpdated" => MakerBasisPointsUpdated(
+            tradingCommissionMakerBP = NaymsDiamond.getMakerBasisPointsUpdatedEventFromLog(obj).tradingCommissionMakerBP.getValue()
+          )
+          case "MaxDividendDenominationsUpdated" => MaxDividendDenominationsUpdated(
+            oldMax = NaymsDiamond.getMaxDividendDenominationsUpdatedEventFromLog(obj).oldMax.getValue(),
+            newMax = NaymsDiamond.getMaxDividendDenominationsUpdatedEventFromLog(obj).newMax.getValue()
+          )
+          case "ObjectCreated" =>
+            ObjectCreated(
+              objectId = NaymsDiamond.getObjectCreatedEventFromLog(obj).objectId,
+              parentId = NaymsDiamond.getObjectCreatedEventFromLog(obj).parentId,
+              hash = NaymsDiamond.getObjectCreatedEventFromLog(obj).dataHash
+            )
+          case "ObjectUpdated" => ObjectUpdated(
+            objectId = NaymsDiamond.getObjectUpdatedEventFromLog(obj).objectId,
+            parentId = NaymsDiamond.getObjectUpdatedEventFromLog(obj).parentId,
+            hash = NaymsDiamond.getObjectUpdatedEventFromLog(obj).dataHash
+          )
+          case "OwnershipTransferred" =>
+            OwnershipTransferred(
+              previousOwner = NaymsDiamond.getOwnershipTransferredEventFromLog(obj).previousOwner.getValue(),
+              newOwner = NaymsDiamond.getOwnershipTransferredEventFromLog(obj).newOwner.getValue()
+            )
+          case "InitializeDiamond" =>
+            InitializeDiamond(sender = NaymsDiamond.getInitializeDiamondEventFromLog(obj).sender.getValue())
+          case "UpgradeExpiration" => UpgradeExpiration(
+            duration =  NaymsDiamond.getUpdateUpgradeExpirationEventFromLog(obj).duration
+          )
+          case "UpgradeCancelled" => UpgradeCancelled(
+            id = NaymsDiamond.getUpgradeCancelledEventFromLog(obj).id,
+            who = NaymsDiamond.getUpgradeCancelledEventFromLog(obj).who.getValue()
+          )
+          case _ => Unsupported(getName(topic))
     }
   }
 
