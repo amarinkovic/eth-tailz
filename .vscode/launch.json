@@ -1,0 +1,25 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "scala",
+            "request": "launch",
+            "name": "eth-tailz",
+            "mainClass": "io.mankea.eth.streamer.App",
+            "buildTarget": "eth-tailz",
+            "args": [
+                "--forever",
+                "--polling-interval",
+                "12",
+                "--chunk-size",
+                "10000",
+                "0x39e2f550fef9ee15b459d16bD4B243b04b1f60e5",
+                "17088058"
+            ],
+            "jvmOptions": [] // Any JVM options if required
+          }
+    ]
+}
