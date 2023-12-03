@@ -7,7 +7,8 @@ libraryDependencies ++= Seq(
   "dev.zio" %% "zio-streams" % "2.0.13",
   "dev.zio" %% "zio-config" % "3.0.7",
   "dev.zio" %% "zio-cli" % "0.5.0",
-  "org.web3j" % "core" % "4.9.5"
+  "org.web3j" % "core" % "4.9.5",
+  "ch.qos.logback" % "logback-classic" % "1.4.4"
 )
 
 addCommandAlias("generateCliNativeConfig", "nativeImageRunAgent")
