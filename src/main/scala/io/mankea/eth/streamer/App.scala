@@ -1,22 +1,12 @@
 package io.mankea.eth.streamer
 
-import io.mankea.eth.streamer.service._
-import org.web3j.abi.FunctionReturnDecoder
-import org.web3j.abi.datatypes.Address
-import org.web3j.protocol.Web3j
-import org.web3j.protocol.core.methods.request.EthFilter
-import org.web3j.protocol.core.methods.response.EthLog.LogObject
-import org.web3j.protocol.core.methods.response.{EthBlock, EthLog}
-import org.web3j.protocol.core.{DefaultBlockParameter, DefaultBlockParameterName, DefaultBlockParameterNumber}
-import zio._
+import io.mankea.eth.streamer.service.*
+import zio.*
 import zio.Console.printLine
-import zio.System.SystemLive
+import zio.cli.*
 import zio.cli.HelpDoc.Span.text
-import zio.cli._
-import zio.stream._
+import zio.stream.*
 
-import java.math.BigInteger
-import java.nio.file.Path as JPath
 import scala.jdk.CollectionConverters.*
 
 object App extends ZIOCliDefault {

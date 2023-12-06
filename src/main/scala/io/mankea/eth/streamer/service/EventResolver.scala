@@ -1,28 +1,26 @@
 package io.mankea.eth.streamer.service
 
-import org.web3j.abi.datatypes.generated.{Bytes32, Uint256, Uint8}
-import org.web3j.abi.datatypes.{Address, Bool, Event, Type, Utf8String}
-import org.web3j.abi.{EventEncoder, FunctionReturnDecoder, TypeReference}
+import org.web3j.abi.FunctionReturnDecoder
+import org.web3j.abi.datatypes.generated.{Bytes32, Uint256}
+import org.web3j.abi.datatypes.{Bool, Event, Type, Utf8String}
 import org.web3j.protocol.core.methods.response.EthLog.LogObject
 import org.web3j.utils.Numeric
 import zio.{Task, ZIO, ZLayer}
 
 import java.math.BigInteger
-import scala.jdk.CollectionConverters.*
-
-import io.mankea.eth.streamer.service.EventTypes
 import scala.Conversion
+import scala.jdk.CollectionConverters.*
 
 type Web3jEventType = Event
 
 given Conversion[BigInteger, BigInt] = BigInt(_)
 given Conversion[BigInteger, Int] = BigInt(_).intValue
 given Conversion[Bytes32, Bytes32String] = b => Numeric.toHexString(b.getValue)
-given Conversion[Utf8String, String] = _.getValue();
-given Conversion[Uint256, BigInt] = _.getValue()
-given Conversion[Uint256, Int] = _.getValue().intValueExact()
-given Conversion[Uint256, Long] = _.getValue().longValueExact()
-given Conversion[Bool, Boolean] = _.getValue()
+given Conversion[Utf8String, String] = _.getValue;
+given Conversion[Uint256, BigInt] = _.getValue
+given Conversion[Uint256, Int] = _.getValue.intValueExact()
+given Conversion[Uint256, Long] = _.getValue.longValueExact()
+given Conversion[Bool, Boolean] = _.getValue
 
 opaque type Bytes32String <: String = String
 object Bytes32String {
@@ -103,7 +101,7 @@ case class EventResolverImpl() extends EventResolver {
             )
           case "CreateUpgrade" => CreateUpgrade(
             id = NaymsDiamond.getCreateUpgradeEventFromLog(obj).id,
-            who = NaymsDiamond.getCreateUpgradeEventFromLog(obj).who.getValue()
+            who = NaymsDiamond.getCreateUpgradeEventFromLog(obj).who.getValue
           )
           case "DividendDistribution" =>
             DividendDistribution(
@@ -129,7 +127,7 @@ case class EventResolverImpl() extends EventResolver {
             )
           case "TokenWrapped" => TokenWrapped(
             id = NaymsDiamond.getTokenWrappedEventFromLog(obj).entityId,
-            wrapper = NaymsDiamond.getTokenWrappedEventFromLog(obj).tokenWrapper.getValue()
+            wrapper = NaymsDiamond.getTokenWrappedEventFromLog(obj).tokenWrapper.getValue
           )
           case "SimplePolicyCreated" =>
             SimplePolicyCreated(
@@ -236,21 +234,21 @@ case class EventResolverImpl() extends EventResolver {
               tokenId = NaymsDiamond.getInternalTokenBalanceUpdateEventFromLog(obj).tokenId,
               newAmount = NaymsDiamond.getInternalTokenBalanceUpdateEventFromLog(obj).newAmountOwned,
               funcName = NaymsDiamond.getInternalTokenBalanceUpdateEventFromLog(obj).functionName,
-              sender = NaymsDiamond.getInternalTokenBalanceUpdateEventFromLog(obj).msgSender.getValue()
+              sender = NaymsDiamond.getInternalTokenBalanceUpdateEventFromLog(obj).msgSender.getValue
             )
           case "InternalTokenSupplyUpdate" =>
             InternalTokenSupplyUpdate(
               tokenId = NaymsDiamond.getInternalTokenSupplyUpdateEventFromLog(obj).tokenId,
               newTokenSupply = NaymsDiamond.getInternalTokenSupplyUpdateEventFromLog(obj).newTokenSupply,
               funcName = NaymsDiamond.getInternalTokenSupplyUpdateEventFromLog(obj).functionName,
-              sender = NaymsDiamond.getInternalTokenSupplyUpdateEventFromLog(obj).msgSender.getValue()
+              sender = NaymsDiamond.getInternalTokenSupplyUpdateEventFromLog(obj).msgSender.getValue
             )
           case "MakerBasisPointsUpdated" => MakerBasisPointsUpdated(
-            tradingCommissionMakerBP = NaymsDiamond.getMakerBasisPointsUpdatedEventFromLog(obj).tradingCommissionMakerBP.getValue()
+            tradingCommissionMakerBP = NaymsDiamond.getMakerBasisPointsUpdatedEventFromLog(obj).tradingCommissionMakerBP.getValue
           )
           case "MaxDividendDenominationsUpdated" => MaxDividendDenominationsUpdated(
-            oldMax = NaymsDiamond.getMaxDividendDenominationsUpdatedEventFromLog(obj).oldMax.getValue(),
-            newMax = NaymsDiamond.getMaxDividendDenominationsUpdatedEventFromLog(obj).newMax.getValue()
+            oldMax = NaymsDiamond.getMaxDividendDenominationsUpdatedEventFromLog(obj).oldMax.getValue,
+            newMax = NaymsDiamond.getMaxDividendDenominationsUpdatedEventFromLog(obj).newMax.getValue
           )
           case "ObjectCreated" =>
             ObjectCreated(
@@ -265,17 +263,17 @@ case class EventResolverImpl() extends EventResolver {
           )
           case "OwnershipTransferred" =>
             OwnershipTransferred(
-              previousOwner = NaymsDiamond.getOwnershipTransferredEventFromLog(obj).previousOwner.getValue(),
-              newOwner = NaymsDiamond.getOwnershipTransferredEventFromLog(obj).newOwner.getValue()
+              previousOwner = NaymsDiamond.getOwnershipTransferredEventFromLog(obj).previousOwner.getValue,
+              newOwner = NaymsDiamond.getOwnershipTransferredEventFromLog(obj).newOwner.getValue
             )
           case "InitializeDiamond" =>
-            InitializeDiamond(sender = NaymsDiamond.getInitializeDiamondEventFromLog(obj).sender.getValue())
+            InitializeDiamond(sender = NaymsDiamond.getInitializeDiamondEventFromLog(obj).sender.getValue)
           case "UpgradeExpiration" => UpgradeExpiration(
             duration =  NaymsDiamond.getUpdateUpgradeExpirationEventFromLog(obj).duration
           )
           case "UpgradeCancelled" => UpgradeCancelled(
             id = NaymsDiamond.getUpgradeCancelledEventFromLog(obj).id,
-            who = NaymsDiamond.getUpgradeCancelledEventFromLog(obj).who.getValue()
+            who = NaymsDiamond.getUpgradeCancelledEventFromLog(obj).who.getValue
           )
           case _ => Unsupported(getName(topic))
     }
