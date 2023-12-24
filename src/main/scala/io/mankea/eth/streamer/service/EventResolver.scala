@@ -315,20 +315,6 @@ case class EventResolverImpl() extends EventResolver {
           case _ => Unsupported(getName(topic))
     }
   }
-
-  private def decode(logObj: LogObject, eventType: Web3jEventType): List[Type[_]] = {
-    try {
-      val nonIndexedDecoded = FunctionReturnDecoder.decode(logObj.getData, eventType.getNonIndexedParameters).asScala.toList
-      val indexedDecoded = (0 until eventType.getIndexedParameters.size())
-        .map(x => FunctionReturnDecoder.decodeIndexedValue(logObj.getTopics.get(x + 1), eventType.getIndexedParameters.get(x))).toList
-
-      indexedDecoded ++ nonIndexedDecoded
-    } catch {
-      case e: IndexOutOfBoundsException =>
-        println(s"#${logObj.getBlockNumber} | TX: ${logObj.getTransactionHash} => `'${eventType.getName}` decoding failed due to: ${e.getMessage}`")
-        throw e
-    }
-  }
 }
 
 object EventResolver {
