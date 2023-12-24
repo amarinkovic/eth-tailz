@@ -22,7 +22,7 @@ lazy val root =
       Compile / mainClass := Some("io.mankea.eth.streamer.App"),
 
       // sbt-native-image configs
-      nativeImageVersion := "17.0.7",
+      nativeImageVersion := "17.0.8",
       nativeImageJvm := "graalvm",
       nativeImageOptions := {
         Seq(
