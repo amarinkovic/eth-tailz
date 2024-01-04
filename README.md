@@ -44,3 +44,13 @@ publishLocal
  ```
 
 Find the exact version produced and update it in this projects `plugins.sbt`
+
+### Workaround GraalVM issues
+
+Make sure to set `GRAAL_HOME` environment variable pointing to a GraalVM installation folder. You might also get the following error:
+
+```java
+[error] Failed to automatically install native-image. To fix this problem, install native-image manually and start sbt with the environment variable 'NATIVE_IMAGE_INSTALLED=true'
+```
+
+In that case make sure to have `NATIVE_IMAGE_INSTALLED` environment variable set to `true`.
