@@ -32,21 +32,20 @@ object App extends ZIOCliDefault {
   ): ZStream[Web3Service, Throwable, EthLogEvent] = {
     val waitMessage = s"--- reached current block, sleeping for ${pollingInterval.getSeconds} seconds"
 
-    ZStream.fromZIO(ZIO.service[Web3Service]).flatMap { web3Service =>
-      ZStream.unfoldChunkZIO(initialFrom) { from =>
-        for {
-          currentBlock <- web3Service.getCurrentBlockNumber
-          to <- ZIO.succeed(currentBlock.min(from + chunkSize))
-          logs <- web3Service.getLogs(contractAddress, from, to).catchAll { error =>
-            Console.printLine(s"Failed getting chunk #$from -> #$to due to: ${error.getMessage}").as(List.empty[EthLogEvent])
-          }
-          _ <- if (to == currentBlock && forever && logs.isEmpty) {
-            Console.printLine(waitMessage) *> ZIO.sleep(pollingInterval)
-          } else ZIO.unit
-        } yield
-          if (to == currentBlock && !forever) None // finish at current block
-          else Some((Chunk.fromIterable(logs), to + 1))
-      }
+    ZStream.unfoldChunkZIO(initialFrom) { from =>
+      for {
+        web3Service <- ZIO.service[Web3Service]
+        currentBlock <- web3Service.getCurrentBlockNumber
+        to <- ZIO.succeed(currentBlock.min(from + chunkSize))
+        logs <- web3Service.getLogs(contractAddress, from, to).catchAll { error =>
+          Console.printLine(s"Failed getting chunk #$from -> #$to due to: ${error.getMessage}").as(List.empty[EthLogEvent])
+        }
+        _ <- if (to == currentBlock && forever && logs.isEmpty) {
+          Console.printLine(waitMessage) *> ZIO.sleep(pollingInterval)
+        } else ZIO.unit
+      } yield
+        if (to == currentBlock && !forever) None // finish at current block
+        else Some((Chunk.fromIterable(logs), to + 1))
     }
   }
 
