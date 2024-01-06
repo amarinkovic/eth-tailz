@@ -47,7 +47,13 @@ Find the exact version produced and update it in this projects `plugins.sbt`
 
 ### Workaround GraalVM issues
 
-Make sure to set `GRAAL_HOME` environment variable pointing to a GraalVM installation folder. You might also get the following error:
+Current version of this code works with Graal VM Java 21. 
+
+Sbt native image plugin uses [Coursier](https://get-coursier.io/) to detect java. Make sure to have Graal VM installed via Coursier.
+
+Make sure to set `GRAAL_HOME` environment variable pointing to a GraalVM installation folder. 
+
+You might also get the following error:
 
 ```java
 [error] Failed to automatically install native-image. To fix this problem, install native-image manually and start sbt with the environment variable 'NATIVE_IMAGE_INSTALLED=true'
