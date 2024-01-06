@@ -21,7 +21,7 @@ Executable binary `eth-tailz` will be available inside the `target` folder.
 Run it by giving it a contract address and a block number from which to start streaming. For example, you can run:
 
 ```zsh
-./eth-tailz --forever --polling-interval 12 --chunk-size 10000 0x7E5462DA297440D2a27fE27d1F291Cf67202302B 3276471
+./target/eth-tailz --forever --polling-interval 12 --chunk-size 10000 0x39e2f550fef9ee15b459d16bD4B243b04b1f60e5 17088059
 ```
 
 ### Workaround for the sbt-zio-cli plugin
