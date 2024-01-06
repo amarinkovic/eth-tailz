@@ -1,17 +1,11 @@
 {
-  "resources":{
-  "includes":[{
-    "pattern":"\\Qapplication.conf\\E"
-  }, {
-    "pattern":"java.base:\\Qjdk/internal/icu/impl/data/icudt67b/nfc.nrm\\E"
-  }, {
-    "pattern":"java.base:\\Qjdk/internal/icu/impl/data/icudt67b/nfkc.nrm\\E"
-  }, {
-    "pattern":"java.base:\\Qjdk/internal/icu/impl/data/icudt67b/uprops.icu\\E"
-  }, {
-    "pattern":"java.base:\\Qsun/net/idn/uidna.spp\\E"
-  }, {
-    "pattern":"java.base:\\Qsun/net/www/content-types.properties\\E"
-  }]},
+  "resources":[
+    {"pattern":"\\Qapplication.conf\\E"},
+    {"pattern":"java.base:\\Qjdk/internal/icu/impl/data/icudt67b/nfc.nrm\\E"},
+    {"pattern":"java.base:\\Qjdk/internal/icu/impl/data/icudt67b/nfkc.nrm\\E"},
+    {"pattern":"java.base:\\Qjdk/internal/icu/impl/data/icudt67b/uprops.icu\\E"},
+    {"pattern":"java.base:\\Qsun/net/idn/uidna.spp\\E"},
+    {"pattern":"java.base:\\Qsun/net/www/content-types.properties\\E"}
+  ],
   "bundles":[]
 }

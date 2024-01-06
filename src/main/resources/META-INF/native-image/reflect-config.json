@@ -65,23 +65,23 @@
 },
 {
   "name":"izumi.reflect.internal.fundamentals.platform.console.TrivialLogger$Config$",
-  "fields":[{"name":"0bitmap$1"}]
+  "fields":[{"name":"0bitmap$1", "allowUnsafeAccess":true}]
 },
 {
   "name":"izumi.reflect.macrortti.LightTypeTag",
-  "fields":[{"name":"0bitmap$1"}]
+  "fields":[{"name":"0bitmap$1", "allowUnsafeAccess":true}]
 },
 {
   "name":"izumi.reflect.macrortti.LightTypeTag$ParsedLightTypeTag230Plus",
-  "fields":[{"name":"0bitmap$3"}]
+  "fields":[{"name":"0bitmap$3", "allowUnsafeAccess":true}]
 },
 {
   "name":"izumi.reflect.macrortti.LightTypeTagInheritance",
-  "fields":[{"name":"0bitmap$1"}]
+  "fields":[{"name":"0bitmap$1", "allowUnsafeAccess":true}]
 },
 {
   "name":"izumi.reflect.macrortti.LightTypeTagRef$NameReference",
-  "fields":[{"name":"0bitmap$5"}]
+  "fields":[{"name":"0bitmap$5", "allowUnsafeAccess":true}]
 },
 {
   "name":"java.lang.ClassValue"
@@ -143,7 +143,10 @@
 },
 {
   "name":"java.util.concurrent.atomic.Striped64",
-  "fields":[{"name":"base"}, {"name":"cellsBusy"}]
+  "fields":[
+    {"name":"base"},
+    {"name":"cellsBusy"}
+  ]
 },
 {
   "name":"javax.security.auth.x500.X500Principal",
@@ -177,71 +180,88 @@
 },
 {
   "name":"org.web3j.protocol.core.DefaultBlockParameter",
-  "queryAllDeclaredMethods":true
+  "allDeclaredMethods":true
 },
 {
   "name":"org.web3j.protocol.core.DefaultBlockParameterNumber",
   "allDeclaredFields":true,
-  "queryAllDeclaredMethods":true,
-  "queryAllDeclaredConstructors":true,
+  "allDeclaredMethods":true,
+  "allDeclaredConstructors":true,
   "methods":[{"name":"getValue","parameterTypes":[] }]
 },
 {
   "name":"org.web3j.protocol.core.Request",
   "allDeclaredFields":true,
-  "queryAllDeclaredMethods":true,
-  "queryAllDeclaredConstructors":true,
-  "methods":[{"name":"getId","parameterTypes":[] }, {"name":"getJsonrpc","parameterTypes":[] }, {"name":"getMethod","parameterTypes":[] }, {"name":"getParams","parameterTypes":[] }]
+  "allDeclaredMethods":true,
+  "allDeclaredConstructors":true,
+  "methods":[
+    {"name":"getId","parameterTypes":[] }, 
+    {"name":"getJsonrpc","parameterTypes":[] }, 
+    {"name":"getMethod","parameterTypes":[] }, 
+    {"name":"getParams","parameterTypes":[] }
+  ]
 },
 {
   "name":"org.web3j.protocol.core.Response",
   "allDeclaredFields":true,
-  "queryAllDeclaredMethods":true,
-  "methods":[{"name":"setId","parameterTypes":["long"] }, {"name":"setJsonrpc","parameterTypes":["java.lang.String"] }, {"name":"setResult","parameterTypes":["java.lang.Object"] }]
+  "allDeclaredMethods":true,
+  "methods":[
+    {"name":"setId","parameterTypes":["long"] }, 
+    {"name":"setJsonrpc","parameterTypes":["java.lang.String"] }, 
+    {"name":"setResult","parameterTypes":["java.lang.Object"] }
+  ]
 },
 {
   "name":"org.web3j.protocol.core.Response$Error",
   "allDeclaredFields":true,
-  "queryAllDeclaredMethods":true,
-  "queryAllDeclaredConstructors":true
+  "allDeclaredMethods":true,
+  "allDeclaredConstructors":true
 },
 {
   "name":"org.web3j.protocol.core.methods.request.EthFilter",
   "allDeclaredFields":true,
-  "queryAllDeclaredMethods":true,
-  "queryAllDeclaredConstructors":true,
-  "methods":[{"name":"getAddress","parameterTypes":[] }, {"name":"getBlockHash","parameterTypes":[] }, {"name":"getFromBlock","parameterTypes":[] }, {"name":"getToBlock","parameterTypes":[] }]
+  "allDeclaredMethods":true,
+  "allDeclaredConstructors":true,
+  "methods":[
+    {"name":"getAddress","parameterTypes":[] }, 
+    {"name":"getBlockHash","parameterTypes":[] }, 
+    {"name":"getFromBlock","parameterTypes":[] }, 
+    {"name":"getToBlock","parameterTypes":[] }
+  ]
 },
 {
   "name":"org.web3j.protocol.core.methods.request.Filter",
   "allDeclaredFields":true,
-  "queryAllDeclaredMethods":true,
+  "allDeclaredMethods":true,
   "methods":[{"name":"getTopics","parameterTypes":[] }]
 },
 {
   "name":"org.web3j.protocol.core.methods.response.EthBlockNumber",
   "allDeclaredFields":true,
-  "queryAllDeclaredMethods":true,
-  "queryAllDeclaredConstructors":true,
+  "allDeclaredMethods":true,
+  "allDeclaredConstructors":true,
   "methods":[{"name":"<init>","parameterTypes":[] }]
 },
 {
   "name":"org.web3j.protocol.core.methods.response.EthLog",
   "allDeclaredFields":true,
-  "queryAllDeclaredMethods":true,
-  "queryAllDeclaredConstructors":true,
-  "methods":[{"name":"<init>","parameterTypes":[] }, {"name":"setResult","parameterTypes":["java.util.List"] }]
+  "allDeclaredMethods":true,
+  "allDeclaredConstructors":true,
+  "methods":[
+    {"name":"<init>","parameterTypes":[] }, 
+    {"name":"setResult","parameterTypes":["java.util.List"] }
+  ]
 },
 {
   "name":"org.web3j.protocol.core.methods.response.EthLog$LogObject",
   "allDeclaredFields":true,
-  "queryAllDeclaredMethods":true,
-  "queryAllDeclaredConstructors":true,
+  "allDeclaredMethods":true,
+  "allDeclaredConstructors":true,
   "methods":[{"name":"<init>","parameterTypes":[] }]
 },
 {
   "name":"org.web3j.protocol.core.methods.response.EthLog$LogResult",
-  "queryAllDeclaredMethods":true
+  "allDeclaredMethods":true
 },
 {
   "name":"org.web3j.protocol.core.methods.response.EthLog$LogResultDeserialiser",
@@ -250,8 +270,18 @@
 {
   "name":"org.web3j.protocol.core.methods.response.Log",
   "allDeclaredFields":true,
-  "queryAllDeclaredMethods":true,
-  "methods":[{"name":"setAddress","parameterTypes":["java.lang.String"] }, {"name":"setBlockHash","parameterTypes":["java.lang.String"] }, {"name":"setBlockNumber","parameterTypes":["java.lang.String"] }, {"name":"setData","parameterTypes":["java.lang.String"] }, {"name":"setLogIndex","parameterTypes":["java.lang.String"] }, {"name":"setRemoved","parameterTypes":["boolean"] }, {"name":"setTopics","parameterTypes":["java.util.List"] }, {"name":"setTransactionHash","parameterTypes":["java.lang.String"] }, {"name":"setTransactionIndex","parameterTypes":["java.lang.String"] }]
+  "allDeclaredMethods":true,
+  "methods":[
+    {"name":"setAddress","parameterTypes":["java.lang.String"] }, 
+    {"name":"setBlockHash","parameterTypes":["java.lang.String"] }, 
+    {"name":"setBlockNumber","parameterTypes":["java.lang.String"] }, 
+    {"name":"setData","parameterTypes":["java.lang.String"] }, 
+    {"name":"setLogIndex","parameterTypes":["java.lang.String"] }, 
+    {"name":"setRemoved","parameterTypes":["boolean"] }, 
+    {"name":"setTopics","parameterTypes":["java.util.List"] }, 
+    {"name":"setTransactionHash","parameterTypes":["java.lang.String"] }, 
+    {"name":"setTransactionIndex","parameterTypes":["java.lang.String"] }
+  ]
 },
 {
   "name":"org.web3j.protocol.deserializer.KeepAsJsonDeserialzier",
@@ -295,7 +325,10 @@
 },
 {
   "name":"sun.security.provider.NativePRNG",
-  "methods":[{"name":"<init>","parameterTypes":[] }, {"name":"<init>","parameterTypes":["java.security.SecureRandomParameters"] }]
+  "methods":[
+    {"name":"<init>","parameterTypes":[] }, 
+    {"name":"<init>","parameterTypes":["java.security.SecureRandomParameters"] }
+  ]
 },
 {
   "name":"sun.security.provider.SHA",
@@ -413,159 +446,162 @@
 },
 {
   "name":"zio.Chunk$",
-  "fields":[{"name":"0bitmap$1"}]
+  "fields":[{"name":"0bitmap$1", "allowUnsafeAccess":true}]
 },
 {
   "name":"zio.ConfigProvider$",
-  "fields":[{"name":"0bitmap$1"}]
+  "fields":[{"name":"0bitmap$1", "allowUnsafeAccess":true}]
 },
 {
   "name":"zio.Executor",
-  "fields":[{"name":"0bitmap$1"}]
+  "fields":[{"name":"0bitmap$1", "allowUnsafeAccess":true}]
 },
 {
   "name":"zio.Ref$Atomic",
-  "fields":[{"name":"0bitmap$1"}]
+  "fields":[{"name":"0bitmap$1", "allowUnsafeAccess":true}]
 },
 {
   "name":"zio.System$",
-  "fields":[{"name":"0bitmap$1"}]
+  "fields":[{"name":"0bitmap$1", "allowUnsafeAccess":true}]
 },
 {
   "name":"zio.ZEnvironment$",
-  "fields":[{"name":"0bitmap$1"}]
+  "fields":[{"name":"0bitmap$1", "allowUnsafeAccess":true}]
 },
 {
   "name":"zio.ZIO$",
-  "fields":[{"name":"0bitmap$1"}]
+  "fields":[{"name":"0bitmap$1", "allowUnsafeAccess":true}]
+},
+{
+  "name":"zio.ZIO$EvaluationStep[]"
 },
 {
   "name":"zio.ZLayer",
-  "fields":[{"name":"0bitmap$1"}]
+  "fields":[{"name":"0bitmap$1", "allowUnsafeAccess":true}]
 },
 {
   "name":"zio.cli.Args$Both",
-  "fields":[{"name":"0bitmap$3"}]
+  "fields":[{"name":"0bitmap$3", "allowUnsafeAccess":true}]
 },
 {
   "name":"zio.cli.Args$Empty$",
-  "fields":[{"name":"0bitmap$2"}]
+  "fields":[{"name":"0bitmap$2", "allowUnsafeAccess":true}]
 },
 {
   "name":"zio.cli.Args$Map",
-  "fields":[{"name":"0bitmap$5"}]
+  "fields":[{"name":"0bitmap$5", "allowUnsafeAccess":true}]
 },
 {
   "name":"zio.cli.Args$Single",
-  "fields":[{"name":"0bitmap$1"}]
+  "fields":[{"name":"0bitmap$1", "allowUnsafeAccess":true}]
 },
 {
   "name":"zio.cli.Command$Map",
-  "fields":[{"name":"0bitmap$2"}]
+  "fields":[{"name":"0bitmap$2", "allowUnsafeAccess":true}]
 },
 {
   "name":"zio.cli.Command$Single",
-  "fields":[{"name":"0bitmap$1"}]
+  "fields":[{"name":"0bitmap$1", "allowUnsafeAccess":true}]
 },
 {
   "name":"zio.cli.Options$Both",
-  "fields":[{"name":"0bitmap$5"}]
+  "fields":[{"name":"0bitmap$5", "allowUnsafeAccess":true}]
 },
 {
   "name":"zio.cli.Options$Empty$",
-  "fields":[{"name":"0bitmap$1"}]
+  "fields":[{"name":"0bitmap$1", "allowUnsafeAccess":true}]
 },
 {
   "name":"zio.cli.Options$Map",
-  "fields":[{"name":"0bitmap$6"}]
+  "fields":[{"name":"0bitmap$6", "allowUnsafeAccess":true}]
 },
 {
   "name":"zio.cli.Options$Single",
-  "fields":[{"name":"0bitmap$3"}]
+  "fields":[{"name":"0bitmap$3", "allowUnsafeAccess":true}]
 },
 {
   "name":"zio.cli.Options$WithDefault",
-  "fields":[{"name":"0bitmap$2"}]
+  "fields":[{"name":"0bitmap$2", "allowUnsafeAccess":true}]
 },
 {
   "name":"zio.cli.PrimType$Bool",
-  "fields":[{"name":"0bitmap$6"}]
+  "fields":[{"name":"0bitmap$6", "allowUnsafeAccess":true}]
 },
 {
   "name":"zio.cli.PrimType$Bool$",
-  "fields":[{"name":"0bitmap$7"}]
+  "fields":[{"name":"0bitmap$7", "allowUnsafeAccess":true}]
 },
 {
   "name":"zio.cli.PrimType$Decimal$",
-  "fields":[{"name":"0bitmap$4"}]
+  "fields":[{"name":"0bitmap$4", "allowUnsafeAccess":true}]
 },
 {
   "name":"zio.cli.PrimType$Enumeration",
-  "fields":[{"name":"0bitmap$2"}]
+  "fields":[{"name":"0bitmap$2", "allowUnsafeAccess":true}]
 },
 {
   "name":"zio.cli.PrimType$Instant$",
-  "fields":[{"name":"0bitmap$8"}]
+  "fields":[{"name":"0bitmap$8", "allowUnsafeAccess":true}]
 },
 {
   "name":"zio.cli.PrimType$Integer$",
-  "fields":[{"name":"0bitmap$5"}]
+  "fields":[{"name":"0bitmap$5", "allowUnsafeAccess":true}]
 },
 {
   "name":"zio.cli.PrimType$LocalDateTime$",
-  "fields":[{"name":"0bitmap$10"}]
+  "fields":[{"name":"0bitmap$10", "allowUnsafeAccess":true}]
 },
 {
   "name":"zio.cli.PrimType$LocalTime$",
-  "fields":[{"name":"0bitmap$11"}]
+  "fields":[{"name":"0bitmap$11", "allowUnsafeAccess":true}]
 },
 {
   "name":"zio.cli.PrimType$MonthDay$",
-  "fields":[{"name":"0bitmap$12"}]
+  "fields":[{"name":"0bitmap$12", "allowUnsafeAccess":true}]
 },
 {
   "name":"zio.cli.PrimType$OffsetDateTime$",
-  "fields":[{"name":"0bitmap$13"}]
+  "fields":[{"name":"0bitmap$13", "allowUnsafeAccess":true}]
 },
 {
   "name":"zio.cli.PrimType$OffsetTime$",
-  "fields":[{"name":"0bitmap$14"}]
+  "fields":[{"name":"0bitmap$14", "allowUnsafeAccess":true}]
 },
 {
   "name":"zio.cli.PrimType$Path",
-  "fields":[{"name":"0bitmap$1"}]
+  "fields":[{"name":"0bitmap$1", "allowUnsafeAccess":true}]
 },
 {
   "name":"zio.cli.PrimType$Period$",
-  "fields":[{"name":"0bitmap$15"}]
+  "fields":[{"name":"0bitmap$15", "allowUnsafeAccess":true}]
 },
 {
   "name":"zio.cli.PrimType$Text$",
-  "fields":[{"name":"0bitmap$3"}]
+  "fields":[{"name":"0bitmap$3", "allowUnsafeAccess":true}]
 },
 {
   "name":"zio.cli.PrimType$Year$",
-  "fields":[{"name":"0bitmap$16"}]
+  "fields":[{"name":"0bitmap$16", "allowUnsafeAccess":true}]
 },
 {
   "name":"zio.cli.PrimType$YearMonth$",
-  "fields":[{"name":"0bitmap$17"}]
+  "fields":[{"name":"0bitmap$17", "allowUnsafeAccess":true}]
 },
 {
   "name":"zio.cli.PrimType$ZoneId$",
-  "fields":[{"name":"0bitmap$19"}]
+  "fields":[{"name":"0bitmap$19", "allowUnsafeAccess":true}]
 },
 {
   "name":"zio.cli.PrimType$ZoneOffset$",
-  "fields":[{"name":"0bitmap$20"}]
+  "fields":[{"name":"0bitmap$20", "allowUnsafeAccess":true}]
 },
 {
   "name":"zio.cli.PrimType$ZonedDateTime$",
-  "fields":[{"name":"0bitmap$18"}]
+  "fields":[{"name":"0bitmap$18", "allowUnsafeAccess":true}]
 },
 {
   "name":"zio.cli.figlet.FigFont$",
-  "fields":[{"name":"0bitmap$1"}]
+  "fields":[{"name":"0bitmap$1", "allowUnsafeAccess":true}]
 },
 {
   "name":"zio.config.ConfigDescriptorModule$ConfigDescriptorAdt$",
@@ -609,7 +645,7 @@
 },
 {
   "name":"zio.internal.FiberRuntime",
-  "fields":[{"name":"0bitmap$1"}]
+  "fields":[{"name":"0bitmap$1", "allowUnsafeAccess":true}]
 },
 {
   "name":"zio.internal.HeadPadding",
@@ -621,7 +657,7 @@
 },
 {
   "name":"zio.package$",
-  "fields":[{"name":"0bitmap$1"}]
+  "fields":[{"name":"0bitmap$1", "allowUnsafeAccess":true}]
 },
 {
   "name":"zio.stream.ZStream$",
