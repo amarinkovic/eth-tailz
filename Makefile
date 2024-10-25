@@ -10,6 +10,14 @@ run-mainnet:	## Run tailz on Etherum MAINNET
 		0x39e2f550fef9ee15b459d16bD4B243b04b1f60e5 \
 		17088058"
 
+run-base:		## Run tailz on Base MAINNET
+	sbt "eth-tailz / runMain io.mankea.eth.streamer.App \
+		--forever \
+		--polling-interval 12 \
+		--chunk-size 10000 \
+		0x546Fb1621CF8C0e8e3ED8E3508b7c5100ADdBc03 \
+		7760826"
+
 .DEFAULT_GOAL := help
 
 .PHONY: help docs test run
