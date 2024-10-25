@@ -7,7 +7,7 @@
         {
             "type": "scala",
             "request": "launch",
-            "name": "eth-tailz",
+            "name": "MAINNET",
             "mainClass": "io.mankea.eth.streamer.App",
             "buildTarget": "eth-tailz",
             "args": [
@@ -20,6 +20,23 @@
                 "17088058"
             ],
             "jvmOptions": [], // Any JVM options if required
-          }
+        },
+        {
+            "type": "scala",
+            "request": "launch",
+            "name": "BASE",
+            "mainClass": "io.mankea.eth.streamer.App",
+            "buildTarget": "eth-tailz",
+            "args": [
+                "--forever",
+                "--polling-interval",
+                "12",
+                "--chunk-size",
+                "10000",
+                "0x546Fb1621CF8C0e8e3ED8E3508b7c5100ADdBc03",
+                "7760826"
+            ],
+            "jvmOptions": [], // Any JVM options if required
+        }
     ]
 }
