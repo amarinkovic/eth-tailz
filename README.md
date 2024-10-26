@@ -1,6 +1,6 @@
 # eth-tailz
 
-Purely functional stream processing of Ethereum transaction Event Logs for [nayms/contracts-v3](https://github.com/nayms/contracts-v3), implemented with [ZIO](https://zio.dev/reference/stream/zstream/) and [web3j](https://github.com/web3j/web3j).
+Purely functional stream processing of Ethereum transaction Event Logs for [nayms/contracts-v3](https://github.com/nayms/contracts-v3), implemented in Scala with [ZIO](https://zio.dev/reference/stream/zstream/) and [web3j](https://github.com/web3j/web3j).
 
 ### Build native image
 
