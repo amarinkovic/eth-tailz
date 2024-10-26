@@ -54,11 +54,10 @@ object Web3Service {
   def getLogs(contractAddress: String, from: BigInteger, to: BigInteger): ZIO[Web3Service, Throwable, List[EthLogEvent]] =
     ZIO.serviceWithZIO[Web3Service](_.getLogs(contractAddress, from, to))
 
-  val live: ZLayer[EventResolver, zio.Config.Error, Web3Service] =
+  def live(rpcUrl: String): ZLayer[EventResolver, zio.Config.Error, Web3Service] =
     ZLayer {
       for {
-        nodeUrl <- ZIO.config(Config.string("ETH_MAINNET_RPC_URL"))
-        web3j <- ZIO.succeed(Web3j.build(new HttpService(nodeUrl)))
+        web3j <- ZIO.succeed(Web3j.build(new HttpService(rpcUrl)))
         eventResolver <- ZIO.service[EventResolver]
       } yield Web3ServiceImpl(web3j, eventResolver)
     }

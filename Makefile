@@ -4,6 +4,7 @@
 
 run-mainnet:	## Run tailz on Etherum MAINNET
 	sbt "eth-tailz / runMain io.mankea.eth.streamer.App \
+		--rpc-url ${ETH_MAINNET_RPC_URL} \
 		--forever \
 		--polling-interval 12 \
 		--chunk-size 10000 \
@@ -12,6 +13,7 @@ run-mainnet:	## Run tailz on Etherum MAINNET
 
 run-base:		## Run tailz on Base MAINNET
 	sbt "eth-tailz / runMain io.mankea.eth.streamer.App \
+		--rpc-url ${BASE_MAINNET_RPC_URL} \
 		--forever \
 		--polling-interval 12 \
 		--chunk-size 10000 \
@@ -21,6 +23,6 @@ run-base:		## Run tailz on Base MAINNET
 .DEFAULT_GOAL := help
 
 .PHONY: help docs test run
-help:		## display this help message
+help:		## Display this help message
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n\nTargets:\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-10s\033[0m %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
 

@@ -63,6 +63,9 @@ object App extends ZIOCliDefault {
       .map(_.intValue)
       .withDefault(defaultChunkSize)
       ?? "Number of blocks to query in one JSON RPC request"
+    ++ Options.text("rpc-url").alias("r")
+      .map(_.trim)
+      ?? "RPC URL to Ethereum node"
 
   private val mainCmd = Command("eth-tailz", opts, args)
     .withHelp(HelpDoc.p("Stream ethereum log events"))
@@ -74,13 +77,13 @@ object App extends ZIOCliDefault {
     footer = HelpDoc.p("Let's stream some events!"),
     command = mainCmd
   ) {
-    case ((forever:Boolean, pollingInterval: Duration, chunkSize: Int), (contractAddress: String, blockNumber: BigInt)) =>
+    case ((forever:Boolean, pollingInterval: Duration, chunkSize: Int, rpcUrl: String), (contractAddress: String, blockNumber: BigInt)) =>
       logStream(contractAddress, blockNumber, forever, pollingInterval, chunkSize)
         .filter(onlySupported)
         .via(pipeToString)
         .foreach(Console.printLine(_))
         .provide(
-          Web3Service.live,
+          Web3Service.live(rpcUrl),
           EventResolver.live
         )
   }
