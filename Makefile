@@ -20,6 +20,9 @@ run-base:		## Run tailz on Base MAINNET
 		0x546Fb1621CF8C0e8e3ED8E3508b7c5100ADdBc03 \
 		7760826"
 
+build-native:		## Build native image
+	sbt "nativeImage"
+
 .DEFAULT_GOAL := help
 
 .PHONY: help docs test run

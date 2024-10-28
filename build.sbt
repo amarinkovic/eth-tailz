@@ -30,6 +30,7 @@ lazy val root =
           "-Djdk.http.auth.tunneling.disabledSchemes=",
         )
       },
+      nativeImageInstalled := true,
       nativeImageAgentMerge := true,
       nativeImageOptions += s"-H:ConfigurationFileDirectories=${(Compile / resourceDirectory).value}/META-INF/native-image",
       nativeImageAgentOutputDir := (Compile / resourceDirectory).value / "META-INF/native-image",
