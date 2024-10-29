@@ -1,7 +1,4 @@
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
         {
@@ -11,6 +8,8 @@
             "mainClass": "io.mankea.eth.streamer.App",
             "buildTarget": "eth-tailz",
             "args": [
+                "--rpc-url",
+                "${env:ETH_MAINNET_RPC_URL}",
                 "--forever",
                 "--polling-interval",
                 "12",
@@ -19,7 +18,10 @@
                 "0x39e2f550fef9ee15b459d16bD4B243b04b1f60e5",
                 "17088058"
             ],
-            "jvmOptions": [], // Any JVM options if required
+            "env": {
+                "ETH_MAINNET_RPC_URL": "${env:ETH_MAINNET_RPC_URL}"
+            },
+            "jvmOptions": [],
         },
         {
             "type": "scala",
@@ -28,6 +30,8 @@
             "mainClass": "io.mankea.eth.streamer.App",
             "buildTarget": "eth-tailz",
             "args": [
+                "--rpc-url",
+                "${env:BASE_MAINNET_RPC_URL}",
                 "--forever",
                 "--polling-interval",
                 "12",
@@ -36,7 +40,10 @@
                 "0x546Fb1621CF8C0e8e3ED8E3508b7c5100ADdBc03",
                 "7760826"
             ],
-            "jvmOptions": [], // Any JVM options if required
+            "env": {
+                "BASE_MAINNET_RPC_URL": "${env:BASE_MAINNET_RPC_URL}"
+            },
+            "jvmOptions": [],
         }
     ]
 }
