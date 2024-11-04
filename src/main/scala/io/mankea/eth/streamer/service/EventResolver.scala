@@ -11,6 +11,7 @@ import zio.{Task, ZIO, ZLayer}
 import java.math.BigInteger
 import scala.Conversion
 import scala.jdk.CollectionConverters.*
+import java.time.Instant
 
 type Web3jEventType = Event
 
@@ -47,24 +48,31 @@ case class DividendDistribution(guid: Bytes32String, from: Bytes32String, to: By
 case class DividendWithdrawn(accountId: Bytes32String, tokenId: Bytes32String, amountOwned: BigInt, dividendTokenId: Bytes32String, dividendAmountWithdrawn: BigInt) extends TypedEvent
 case class EntityCreated(entityId: Bytes32String, entityAdmin: Bytes32String) extends TypedEvent
 case class EntityUpdated(entityId: Bytes32String) extends TypedEvent
+case class ExternalDeposit(receiverId: Bytes32String, externalTokenAddress: AddressString, amount: BigInt) extends TypedEvent // TODO
+case class ExternalWithdraw(entityId: Bytes32String, receiver: AddressString, externalTokenAddress: AddressString, amount: BigInt) extends TypedEvent // TODO
 case class FeePaid(fromId: Bytes32String, toId: Bytes32String, tokenId: Bytes32String, amount: BigInt, feeType: Int) extends TypedEvent
-//case class FeeScheduleAdded(entityId: Bytes32String, feeType: Int, FeeSchedule feeSchedule) extends TypedEvent
-//case class FunctionsLocked(selectors: List[String]) extends TypedEvent
-//case class FunctionsUnlocked(selectors: List[String]) extends TypedEvent
+case class FeeScheduleRemoved(entityId: Bytes32String, feeType: BigInt) extends TypedEvent // TODO
+// case class FeeScheduleAdded(entityId: Bytes32String, feeType: Int, FeeSchedule feeSchedule) extends TypedEvent // how to struct?
+// case class FunctionsLocked(selectors: List[String]) extends TypedEvent
+// case class FunctionsUnlocked(selectors: List[String]) extends TypedEvent
 case class InitializeDiamond(sender: AddressString) extends TypedEvent
 case class InternalTokenBalanceUpdate(ownerId: Bytes32String, tokenId: Bytes32String, newAmount: BigInt, funcName: String, sender: AddressString) extends TypedEvent
 case class InternalTokenSupplyUpdate(tokenId: Bytes32String, newTokenSupply: BigInt, funcName: String, sender: AddressString) extends TypedEvent
 case class MakerBasisPointsUpdated(tradingCommissionMakerBP: Int) extends TypedEvent
 case class MaxDividendDenominationsUpdated(oldMax: Int, newMax: Int) extends TypedEvent
+case class MinimumSellUpdated(objectId: Bytes32String, minimumSell: BigInt) extends TypedEvent // TODO
 case class ObjectCreated(objectId: Bytes32String, parentId: Bytes32String, hash: Bytes32String) extends TypedEvent
+case class ObjectMinimumSellUpdated(objectId: Bytes32String, newMinimumSell: BigInt) extends TypedEvent // TODO
 case class ObjectUpdated(objectId: Bytes32String, parentId :Bytes32String, hash: Bytes32String) extends TypedEvent
 case class OrderAdded(orderId: Long, maker: Bytes32String, sellToken: Bytes32String, sellAmount: BigInt, sellAmountInitial: BigInt, buyToken: Bytes32String, buyAmount: BigInt, buyAmountInitial: BigInt, state: Int) extends TypedEvent
 case class OrderCancelled(orderId: Long, taker: Bytes32String, sellToken: Bytes32String) extends TypedEvent
 case class OrderExecuted(orderId: Long, taker: Bytes32String, sellToken: Bytes32String, sellAmount: BigInt, buyToken: Bytes32String, buyAmount: BigInt, state: Int) extends TypedEvent
+case class OrderMatched(orderId: Long, matchedWithId: Long, sellAmountMatched: BigInt, buyAmountMatched: BigInt) extends TypedEvent // TODO
 case class OwnershipTransferred(previousOwner: AddressString, newOwner: AddressString) extends TypedEvent
 case class RoleCanAssignUpdated(role: String, group: String) extends TypedEvent
 case class RoleGroupUpdated(role: String, group: String, roleInGroup: Boolean) extends TypedEvent
 case class RoleUpdated(objectId: Bytes32String, contextId: Bytes32String, roleId: Bytes32String, funcName: String) extends TypedEvent
+case class SelfOnboardingCompleted(userAddress: AddressString) extends TypedEvent // TODO
 case class SimplePolicyCancelled(id: Bytes32String) extends TypedEvent
 case class SimplePolicyClaimPaid(claimId: Bytes32String, policyId: Bytes32String, insuredId: Bytes32String, amount: BigInt) extends TypedEvent
 case class SimplePolicyCreated(id: Bytes32String, entityId: Bytes32String) extends TypedEvent
@@ -73,11 +81,17 @@ case class SimplePolicyPremiumPaid(id: Bytes32String, amount: BigInt) extends Ty
 case class SupportedTokenAdded(tokenAddress: AddressString) extends TypedEvent
 case class TokenInfoUpdated(objectId: Bytes32String, symbol: String, name: String) extends TypedEvent
 case class TokenizationEnabled(objectId: Bytes32String, symbol: String, name: String) extends TypedEvent
+case class TokenRewardCollected(stakerId: Bytes32String, entityId: Bytes32String, tokenId: Bytes32String, interval: Int, rewardCurrency: Bytes32String, rewardAmount: BigInt) extends TypedEvent // TODO
+case class TokenRewardPaid(guid: Bytes32String, entityId: Bytes32String, tokenId: Bytes32String, rewardTokenId: Bytes32String, rewardAmount: BigInt) extends TypedEvent // TODO
 case class TokenSaleStarted(entityId: Bytes32String, offerId: Long, tokenSymbol: String, tokenName: String) extends TypedEvent
+case class TokenStaked(stakerId: Bytes32String, entityId: Bytes32String, tokenId: Bytes32String, amount: BigInt) extends TypedEvent // TODO
+case class TokenStakingStarted(entityId: Bytes32String, tokenId: Bytes32String, initDate: Instant, a: Long, r: Long, divider: Long, interval: Int) extends TypedEvent // TODO
+case class TokenUnstaked(stakerId: Bytes32String, entityId: Bytes32String, tokenId: Bytes32String, amount: BigInt) extends TypedEvent // TODO
+case class UpdateUpgradeExpiration(duration: BigInt) extends TypedEvent // TODO
 case class TokenWrapped(id: Bytes32String, wrapper: AddressString) extends TypedEvent
-case class Unsupported(topic: String) extends TypedEvent
 case class UpgradeExpiration(duration: BigInt) extends TypedEvent
 case class UpgradeCancelled(id: Bytes32String, who: AddressString) extends TypedEvent
+case class Unsupported(topic: String) extends TypedEvent
 
 
 trait EventResolver {
