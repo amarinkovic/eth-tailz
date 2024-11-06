@@ -2,7 +2,12 @@ scalaVersion := "3.3.1"
 
 ThisBuild / name := "eth-tailz"
 
+githubTokenSource := TokenSource.GitConfig("github.token")
+
+resolvers += Resolver.githubPackages("amarinkovic", "contracts-v3-java")
+
 libraryDependencies ++= Seq(
+  "io.nayms" % "contracts" % "3.9.3",
   "dev.zio" %% "zio" % "2.0.13",
   "dev.zio" %% "zio-streams" % "2.0.13",
   "dev.zio" %% "zio-config" % "3.0.7",
