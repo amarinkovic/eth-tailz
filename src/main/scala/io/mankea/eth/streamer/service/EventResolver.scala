@@ -1,5 +1,6 @@
 package io.mankea.eth.streamer.service
 
+import io.nayms.contracts.generated.NaymsDiamond
 import io.nayms.contracts.generated.NaymsDiamond.{COLLATERALRATIOUPDATED_EVENT, CREATEUPGRADE_EVENT, DIVIDENDDISTRIBUTION_EVENT, DIVIDENDWITHDRAWN_EVENT, ENTITYCREATED_EVENT, ENTITYUPDATED_EVENT, FEEPAID_EVENT, INITIALIZEDIAMOND_EVENT, INTERNALTOKENBALANCEUPDATE_EVENT, INTERNALTOKENSUPPLYUPDATE_EVENT, MAKERBASISPOINTSUPDATED_EVENT, MAXDIVIDENDDENOMINATIONSUPDATED_EVENT, OBJECTCREATED_EVENT, OBJECTUPDATED_EVENT, ORDERADDED_EVENT, ORDERCANCELLED_EVENT, ORDEREXECUTED_EVENT, OWNERSHIPTRANSFERRED_EVENT, ROLECANASSIGNUPDATED_EVENT, ROLEGROUPUPDATED_EVENT, ROLEUPDATED_EVENT, SIMPLEPOLICYCANCELLED_EVENT, SIMPLEPOLICYCLAIMPAID_EVENT, SIMPLEPOLICYCREATED_EVENT, SIMPLEPOLICYMATURED_EVENT, SIMPLEPOLICYPREMIUMPAID_EVENT, SUPPORTEDTOKENADDED_EVENT, TOKENINFOUPDATED_EVENT, TOKENIZATIONENABLED_EVENT, TOKENSALESTARTED_EVENT, TOKENWRAPPED_EVENT, UPDATEUPGRADEEXPIRATION_EVENT, UPGRADECANCELLED_EVENT}
 import org.web3j.abi.{EventEncoder}
 import org.web3j.abi.datatypes.generated.{Bytes32, Uint256}
@@ -192,7 +193,7 @@ case class EventResolverImpl() extends EventResolver {
             )
           case "SimplePolicyClaimPaid" =>
             SimplePolicyClaimPaid(
-              claimId = NaymsDiamond.getSimplePolicyClaimPaidEventFromLog(obj)._claimId,
+              claimId = NaymsDiamond.getSimplePolicyClaimPaidEventFromLog(obj).claimId,
               policyId = NaymsDiamond.getSimplePolicyClaimPaidEventFromLog(obj).policyId,
               insuredId = NaymsDiamond.getSimplePolicyClaimPaidEventFromLog(obj).insuredId,
               amount = NaymsDiamond.getSimplePolicyClaimPaidEventFromLog(obj).amount
