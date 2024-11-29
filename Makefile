@@ -2,6 +2,14 @@
 # (-include to ignore error if it does not exist)
 -include .env
 
+build:		## Compile the code
+	sbt compile
+
+b: build
+
+build-native:		## Build native image
+	sbt "nativeImage"
+
 run-mainnet:	## Run tailz on Etherum MAINNET
 	sbt "eth-tailz / runMain io.mankea.eth.streamer.App \
 		--rpc-url ${ETH_MAINNET_RPC_URL} \
@@ -37,9 +45,6 @@ run-base-native:		## Run tailz on Base MAINNET
 		--chunk-size 10000 \
 		0x546Fb1621CF8C0e8e3ED8E3508b7c5100ADdBc03 \
 		7760826
-
-build-native:		## Build native image
-	sbt "nativeImage"
 
 .DEFAULT_GOAL := help
 

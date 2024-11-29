@@ -24,11 +24,11 @@ object App extends ZIOCliDefault {
   }
 
   private def logStream(
-       contractAddress: String,
-       initialFrom: BigInt,
-       forever: Boolean,
-       pollingInterval: Duration,
-       chunkSize: Int
+      contractAddress: String,
+      initialFrom: BigInt,
+      forever: Boolean,
+      pollingInterval: Duration,
+      chunkSize: Int
   ): ZStream[Web3Service, Throwable, EthLogEvent] = {
     val waitMessage = s"--- reached current block, sleeping for ${pollingInterval.getSeconds} seconds"
 
@@ -40,9 +40,10 @@ object App extends ZIOCliDefault {
         logs <- web3Service.getLogs(contractAddress, from, to).catchAll { error =>
           Console.printLine(s"Failed getting chunk #$from -> #$to due to: ${error.getMessage}").as(List.empty[EthLogEvent])
         }
-        _ <- if (to == currentBlock && forever && logs.isEmpty) {
-          Console.printLine(waitMessage) *> ZIO.sleep(pollingInterval)
-        } else ZIO.unit
+        _ <-
+          if (to == currentBlock && forever && logs.isEmpty) {
+            Console.printLine(waitMessage) *> ZIO.sleep(pollingInterval)
+          } else ZIO.unit
       } yield
         if (to == currentBlock && !forever) None // finish at current block
         else Some((Chunk.fromIterable(logs), to + 1))
@@ -54,17 +55,23 @@ object App extends ZIOCliDefault {
   private val opts =
     Options.boolean("forever", true).alias("f")
       ?? "This option causes tail to not stop when end of blockchain is reached, but rather to wait for additional blocks to be appended"
-    ++ Options.integer("polling-interval").alias("i")
-      .map(_.intValue)
-      .map(Duration.fromSeconds(_))
-      .withDefault(defaultPollingInterval)
-      ?? "Interval in seconds to poll for new blocks, makes sense with forever(f) option"
-    ++ Options.integer("chunk-size").alias("c")
-      .map(_.intValue)
-      .withDefault(defaultChunkSize)
-      ?? "Number of blocks to query in one JSON RPC request"
-    ++ Options.text("rpc-url").alias("r")
-      .map(_.trim)
+      ++ Options
+        .integer("polling-interval")
+        .alias("i")
+        .map(_.intValue)
+        .map(Duration.fromSeconds(_))
+        .withDefault(defaultPollingInterval)
+      ?? "Interval in seconds to poll for new blocks, makes sense with forever(f) option, defaults to 12s"
+      ++ Options
+        .integer("chunk-size")
+        .alias("c")
+        .map(_.intValue)
+        .withDefault(defaultChunkSize)
+      ?? "Number of blocks to query in one JSON RPC request, defaults to 10_000"
+      ++ Options
+        .text("rpc-url")
+        .alias("r")
+        .map(_.trim)
       ?? "RPC URL to Ethereum node"
 
   private val mainCmd = Command("eth-tailz", opts, args)
@@ -76,15 +83,14 @@ object App extends ZIOCliDefault {
     summary = text("Ethereum Event Log Tail"),
     footer = HelpDoc.p("Let's stream some events!"),
     command = mainCmd
-  ) {
-    case ((forever:Boolean, pollingInterval: Duration, chunkSize: Int, rpcUrl: String), (contractAddress: String, blockNumber: BigInt)) =>
-      logStream(contractAddress, blockNumber, forever, pollingInterval, chunkSize)
-        .filter(onlySupported)
-        .via(pipeToString)
-        .foreach(Console.printLine(_))
-        .provide(
-          Web3Service.live(rpcUrl),
-          EventResolver.live
-        )
+  ) { case ((forever: Boolean, pollingInterval: Duration, chunkSize: Int, rpcUrl: String), (contractAddress: String, blockNumber: BigInt)) =>
+    logStream(contractAddress, blockNumber, forever, pollingInterval, chunkSize)
+      .filter(onlySupported)
+      .via(pipeToString)
+      .foreach(Console.printLine(_))
+      .provide(
+        Web3Service.live(rpcUrl),
+        EventResolver.live
+      )
   }
 }
