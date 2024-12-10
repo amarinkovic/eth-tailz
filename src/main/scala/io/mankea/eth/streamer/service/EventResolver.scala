@@ -48,7 +48,7 @@ import io.nayms.contracts.generated.NaymsDiamond.{
   UPGRADECANCELLED_EVENT
 }
 import org.web3j.abi.{EventEncoder}
-import org.web3j.abi.datatypes.generated.{Bytes32, Uint256, Uint64}
+import org.web3j.abi.datatypes.generated.{Bytes32, Uint256, Uint64, Uint16, Uint8}
 import org.web3j.abi.datatypes.{Bool, Event, Utf8String}
 import org.web3j.protocol.core.methods.response.EthLog.LogObject
 import org.web3j.utils.Numeric
@@ -58,6 +58,7 @@ import java.math.BigInteger
 import scala.Conversion
 import scala.jdk.CollectionConverters.*
 import java.time.Instant
+import org.web3j.abi.datatypes.Address
 
 type Web3jEventType = Event
 
@@ -66,12 +67,14 @@ given Conversion[BigInteger, Int] = BigInt(_).intValue
 given Conversion[Bytes32, Bytes32String] = b => Numeric.toHexString(b.getValue)
 given Conversion[Utf8String, String] = _.getValue;
 given Conversion[Uint256, BigInt] = _.getValue
-given Conversion[Uint256, Int] = _.getValue.intValueExact()
-given Conversion[Uint64, Int] = _.getValue.intValueExact()
-given Conversion[Uint64, Long] = _.getValue.longValueExact()
-given Conversion[Uint256, Long] = _.getValue.longValueExact()
+given Conversion[Uint256, Int] = _.getValue.intValueExact
+given Conversion[Uint64, Int] = _.getValue.intValueExact
+given Conversion[Uint16, Int] = _.getValue.intValueExact
+given Conversion[Uint8, Int] = _.getValue.intValueExact
+given Conversion[Uint64, Long] = _.getValue.longValueExact
+given Conversion[Uint256, Long] = _.getValue.longValueExact
 given Conversion[Bool, Boolean] = _.getValue
-given Conversion[Uint256, Instant] = b => Instant.ofEpochSecond(b.getValue.longValueExact())
+given Conversion[Uint256, Instant] = b => Instant.ofEpochSecond(b.getValue.longValueExact)
 
 opaque type Bytes32String <: String = String
 object Bytes32String {
@@ -85,9 +88,12 @@ object AddressString {
   def apply(value: String) = new AddressString(value)
   given Conversion[String, AddressString] = s => AddressString(s)
   given Conversion[AddressString, String] = s => s
+  given Conversion[Address, AddressString] = s => AddressString(s.getValue)
 }
 
 sealed trait TypedEvent
+
+case class FeeReceiver(receiverId: Bytes32String, basisPoints: Int)
 
 case class CollateralRatioUpdated(entityId: Bytes32String, collateralRatio: BigInt, utilizedCapacity: BigInt) extends TypedEvent
 case class CreateUpgrade(id: Bytes32String, who: AddressString) extends TypedEvent
@@ -101,7 +107,7 @@ case class ExternalDeposit(receiverId: Bytes32String, externalTokenAddress: Addr
 case class ExternalWithdraw(entityId: Bytes32String, receiver: AddressString, externalTokenAddress: AddressString, amount: BigInt) extends TypedEvent
 case class FeePaid(fromId: Bytes32String, toId: Bytes32String, tokenId: Bytes32String, amount: BigInt, feeType: Int) extends TypedEvent
 case class FeeScheduleRemoved(entityId: Bytes32String, feeType: BigInt) extends TypedEvent
-// case class FeeScheduleAdded(entityId: Bytes32String, feeType: Int, FeeSchedule feeSchedule) extends TypedEvent // how to struct?
+case class FeeScheduleAdded(entityId: Bytes32String, feeType: Int, feeReceivers: List[FeeReceiver]) extends TypedEvent
 // case class FunctionsLocked(selectors: List[String]) extends TypedEvent
 // case class FunctionsUnlocked(selectors: List[String]) extends TypedEvent
 case class InitializeDiamond(sender: AddressString) extends TypedEvent
@@ -203,31 +209,35 @@ case class EventResolverImpl() extends EventResolver {
     ZIO.attempt {
       getName(topic) match
         case "CollateralRatioUpdated" =>
+          val event = NaymsDiamond.getCollateralRatioUpdatedEventFromLog(obj)
           CollateralRatioUpdated(
-            entityId = NaymsDiamond.getCollateralRatioUpdatedEventFromLog(obj).entityId,
-            collateralRatio = NaymsDiamond.getCollateralRatioUpdatedEventFromLog(obj).collateralRatio,
-            utilizedCapacity = NaymsDiamond.getCollateralRatioUpdatedEventFromLog(obj).utilizedCapacity
+            entityId = event.entityId,
+            collateralRatio = event.collateralRatio,
+            utilizedCapacity = event.utilizedCapacity
           )
         case "CreateUpgrade" =>
+          val event = NaymsDiamond.getCreateUpgradeEventFromLog(obj)
           CreateUpgrade(
-            id = NaymsDiamond.getCreateUpgradeEventFromLog(obj).id,
-            who = NaymsDiamond.getCreateUpgradeEventFromLog(obj).who.getValue
+            id = event.id,
+            who = event.who
           )
         case "DividendDistribution" =>
+          val event = NaymsDiamond.getDividendDistributionEventFromLog(obj)
           DividendDistribution(
-            guid = NaymsDiamond.getDividendDistributionEventFromLog(obj).guid,
-            from = NaymsDiamond.getDividendDistributionEventFromLog(obj).from,
-            to = NaymsDiamond.getDividendDistributionEventFromLog(obj).to,
-            dividendTokenId = NaymsDiamond.getDividendDistributionEventFromLog(obj).dividendTokenId,
-            amount = NaymsDiamond.getDividendDistributionEventFromLog(obj).amount
+            guid = event .guid,
+            from = event .from,
+            to = event .to,
+            dividendTokenId = event .dividendTokenId,
+            amount = event .amount
           )
         case "DividendWithdrawn" =>
+          val event = NaymsDiamond.getDividendWithdrawnEventFromLog(obj)
           DividendWithdrawn(
-            accountId = NaymsDiamond.getDividendWithdrawnEventFromLog(obj).accountId,
-            tokenId = NaymsDiamond.getDividendWithdrawnEventFromLog(obj).tokenId,
-            amountOwned = NaymsDiamond.getDividendWithdrawnEventFromLog(obj).amountOwned,
-            dividendTokenId = NaymsDiamond.getDividendWithdrawnEventFromLog(obj).dividendTokenId,
-            dividendAmountWithdrawn = NaymsDiamond.getDividendWithdrawnEventFromLog(obj).dividendAmountWithdrawn
+            accountId = event.accountId,
+            tokenId = event.tokenId,
+            amountOwned = event.amountOwned,
+            dividendTokenId = event.dividendTokenId,
+            dividendAmountWithdrawn = event.dividendAmountWithdrawn
           )
         case "TokenSaleStarted" =>
           TokenSaleStarted(
@@ -239,7 +249,7 @@ case class EventResolverImpl() extends EventResolver {
         case "TokenWrapped" =>
           TokenWrapped(
             id = NaymsDiamond.getTokenWrappedEventFromLog(obj).entityId,
-            wrapper = NaymsDiamond.getTokenWrappedEventFromLog(obj).tokenWrapper.getValue
+            wrapper = NaymsDiamond.getTokenWrappedEventFromLog(obj).tokenWrapper // TODO: rename
           )
         case "SimplePolicyCreated" =>
           SimplePolicyCreated(
@@ -278,14 +288,14 @@ case class EventResolverImpl() extends EventResolver {
         case "ExternalDeposit" =>
           ExternalDeposit(
             receiverId = NaymsDiamond.getExternalDepositEventFromLog(obj).receiverId,
-            externalTokenAddress = NaymsDiamond.getExternalDepositEventFromLog(obj).externalTokenAddress.getValue,
+            externalTokenAddress = NaymsDiamond.getExternalDepositEventFromLog(obj).externalTokenAddress,
             amount = NaymsDiamond.getExternalDepositEventFromLog(obj).amount
           )
         case "ExternalWithdraw" =>
           ExternalWithdraw(
             entityId = NaymsDiamond.getExternalWithdrawEventFromLog(obj).entityId,
-            receiver = NaymsDiamond.getExternalWithdrawEventFromLog(obj).receiver.getValue,
-            externalTokenAddress = NaymsDiamond.getExternalWithdrawEventFromLog(obj).externalTokenAddress.getValue,
+            receiver = NaymsDiamond.getExternalWithdrawEventFromLog(obj).receiver,
+            externalTokenAddress = NaymsDiamond.getExternalWithdrawEventFromLog(obj).externalTokenAddress,
             amount = NaymsDiamond.getExternalWithdrawEventFromLog(obj).amount
           )
         case "FeePaid" =>
@@ -301,12 +311,24 @@ case class EventResolverImpl() extends EventResolver {
             entityId = NaymsDiamond.getFeeScheduleRemovedEventFromLog(obj).entityId,
             feeType = NaymsDiamond.getFeeScheduleRemovedEventFromLog(obj).feeType
           )
+        case "FeeScheduleAdded" =>
+          val event = NaymsDiamond.getFeeScheduleAddedEventFromLog(obj)
+          val feeReceivers = for {
+              r <- event.feeSchedule.receiver.getValue.asScala
+              bp <- event.feeSchedule.basisPoints.getValue.asScala
+            } yield FeeReceiver(r, bp)
+
+          FeeScheduleAdded(
+            entityId = event.entityId,
+            feeType = event.feeType,
+            feeReceivers = feeReceivers.toList
+          )
         case "RoleUpdated" =>
           RoleUpdated(
             objectId = NaymsDiamond.getRoleUpdatedEventFromLog(obj).objectId,
             contextId = NaymsDiamond.getRoleUpdatedEventFromLog(obj).contextId,
-            roleId = NaymsDiamond.getRoleUpdatedEventFromLog(obj).assignedRoleId,
-            funcName = NaymsDiamond.getRoleUpdatedEventFromLog(obj).functionName
+            roleId = NaymsDiamond.getRoleUpdatedEventFromLog(obj).assignedRoleId, // TODO: rename
+            funcName = NaymsDiamond.getRoleUpdatedEventFromLog(obj).functionName // TODO: rename
           )
         case "RoleGroupUpdated" =>
           RoleGroupUpdated(
@@ -321,10 +343,12 @@ case class EventResolverImpl() extends EventResolver {
           )
         case "SelfOnboardingCompleted" =>
           SelfOnboardingCompleted(
-            userAddress = NaymsDiamond.getSelfOnboardingCompletedEventFromLog(obj).userAddress.getValue
+            userAddress = NaymsDiamond.getSelfOnboardingCompletedEventFromLog(obj).userAddress
           )
         case "SupportedTokenAdded" =>
-          SupportedTokenAdded(tokenAddress = NaymsDiamond.getSupportedTokenAddedEventFromLog(obj).tokenAddress.getValue)
+          SupportedTokenAdded(
+            tokenAddress = NaymsDiamond.getSupportedTokenAddedEventFromLog(obj).tokenAddress
+          )
         case "TokenInfoUpdated" =>
           TokenInfoUpdated(
             objectId = NaymsDiamond.getTokenInfoUpdatedEventFromLog(obj).objectId,
@@ -376,25 +400,25 @@ case class EventResolverImpl() extends EventResolver {
           InternalTokenBalanceUpdate(
             ownerId = NaymsDiamond.getInternalTokenBalanceUpdateEventFromLog(obj).ownerId,
             tokenId = NaymsDiamond.getInternalTokenBalanceUpdateEventFromLog(obj).tokenId,
-            newAmount = NaymsDiamond.getInternalTokenBalanceUpdateEventFromLog(obj).newAmountOwned,
-            funcName = NaymsDiamond.getInternalTokenBalanceUpdateEventFromLog(obj).functionName,
-            sender = NaymsDiamond.getInternalTokenBalanceUpdateEventFromLog(obj).msgSender.getValue
+            newAmount = NaymsDiamond.getInternalTokenBalanceUpdateEventFromLog(obj).newAmountOwned, // TODO: rename
+            funcName = NaymsDiamond.getInternalTokenBalanceUpdateEventFromLog(obj).functionName, // TODO: rename
+            sender = NaymsDiamond.getInternalTokenBalanceUpdateEventFromLog(obj).msgSender // TODO: rename
           )
         case "InternalTokenSupplyUpdate" =>
           InternalTokenSupplyUpdate(
             tokenId = NaymsDiamond.getInternalTokenSupplyUpdateEventFromLog(obj).tokenId,
             newTokenSupply = NaymsDiamond.getInternalTokenSupplyUpdateEventFromLog(obj).newTokenSupply,
-            funcName = NaymsDiamond.getInternalTokenSupplyUpdateEventFromLog(obj).functionName,
-            sender = NaymsDiamond.getInternalTokenSupplyUpdateEventFromLog(obj).msgSender.getValue
+            funcName = NaymsDiamond.getInternalTokenSupplyUpdateEventFromLog(obj).functionName, // TODO: rename
+            sender = NaymsDiamond.getInternalTokenSupplyUpdateEventFromLog(obj).msgSender
           )
         case "MakerBasisPointsUpdated" =>
           MakerBasisPointsUpdated(
-            tradingCommissionMakerBP = NaymsDiamond.getMakerBasisPointsUpdatedEventFromLog(obj).tradingCommissionMakerBP.getValue
+            tradingCommissionMakerBP = NaymsDiamond.getMakerBasisPointsUpdatedEventFromLog(obj).tradingCommissionMakerBP
           )
         case "MaxDividendDenominationsUpdated" =>
           MaxDividendDenominationsUpdated(
-            oldMax = NaymsDiamond.getMaxDividendDenominationsUpdatedEventFromLog(obj).oldMax.getValue,
-            newMax = NaymsDiamond.getMaxDividendDenominationsUpdatedEventFromLog(obj).newMax.getValue
+            oldMax = NaymsDiamond.getMaxDividendDenominationsUpdatedEventFromLog(obj).oldMax,
+            newMax = NaymsDiamond.getMaxDividendDenominationsUpdatedEventFromLog(obj).newMax
           )
         case "MinimumSellUpdated" =>
           MinimumSellUpdated(
@@ -405,21 +429,23 @@ case class EventResolverImpl() extends EventResolver {
           ObjectCreated(
             objectId = NaymsDiamond.getObjectCreatedEventFromLog(obj).objectId,
             parentId = NaymsDiamond.getObjectCreatedEventFromLog(obj).parentId,
-            hash = NaymsDiamond.getObjectCreatedEventFromLog(obj).dataHash
+            hash = NaymsDiamond.getObjectCreatedEventFromLog(obj).dataHash // TODO: rename
           )
         case "ObjectUpdated" =>
           ObjectUpdated(
             objectId = NaymsDiamond.getObjectUpdatedEventFromLog(obj).objectId,
             parentId = NaymsDiamond.getObjectUpdatedEventFromLog(obj).parentId,
-            hash = NaymsDiamond.getObjectUpdatedEventFromLog(obj).dataHash
+            hash = NaymsDiamond.getObjectUpdatedEventFromLog(obj).dataHash // TODO: rename
           )
         case "OwnershipTransferred" =>
           OwnershipTransferred(
-            previousOwner = NaymsDiamond.getOwnershipTransferredEventFromLog(obj).previousOwner.getValue,
-            newOwner = NaymsDiamond.getOwnershipTransferredEventFromLog(obj).newOwner.getValue
+            previousOwner = NaymsDiamond.getOwnershipTransferredEventFromLog(obj).previousOwner,
+            newOwner = NaymsDiamond.getOwnershipTransferredEventFromLog(obj).newOwner
           )
         case "InitializeDiamond" =>
-          InitializeDiamond(sender = NaymsDiamond.getInitializeDiamondEventFromLog(obj).sender.getValue)
+          InitializeDiamond(
+            sender = NaymsDiamond.getInitializeDiamondEventFromLog(obj).sender
+          )
         case "UpgradeExpiration" =>
           UpgradeExpiration(
             duration = NaymsDiamond.getUpdateUpgradeExpirationEventFromLog(obj).duration
@@ -427,7 +453,7 @@ case class EventResolverImpl() extends EventResolver {
         case "UpgradeCancelled" =>
           UpgradeCancelled(
             id = NaymsDiamond.getUpgradeCancelledEventFromLog(obj).id,
-            who = NaymsDiamond.getUpgradeCancelledEventFromLog(obj).who.getValue
+            who = NaymsDiamond.getUpgradeCancelledEventFromLog(obj).who
           )
         case "TokenRewardCollected" =>
           TokenRewardCollected(
