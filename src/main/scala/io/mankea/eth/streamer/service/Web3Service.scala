@@ -30,20 +30,21 @@ case class Web3ServiceImpl(web3j: Web3j, eventResolver: EventResolver) extends W
     for {
       logs <- ZIO.attemptBlockingIO(web3j.ethGetLogs(filter).send().getLogs.asScala).map(Option(_).getOrElse(List()))
       _ <- Console.printLine(s"#$from -> #$to | ${logs.size} events")
-      typedEventsEffects = logs.map { l =>
-        for {
-          logObj <- ZIO.attempt(l.asInstanceOf[EthLog.LogObject])
-          typedEvent <- eventResolver.getTypedEvent(logObj)
-        } yield EthLogEvent(
-          BigInt(logObj.getBlockNumber),
-          logObj.getTransactionHash,
-          logObj.getLogIndex.longValueExact,
-          typedEvent
-        )
-      }
-      typedEvents <- ZIO.collectAll(typedEventsEffects)
+      typedEvents <- ZIO.collectAll(
+        logs.map { l =>
+          ZIO.attempt(l.asInstanceOf[EthLog.LogObject]).flatMap { logObj =>
+            eventResolver.getTypedEvent(logObj).map { typedEvent =>
+              EthLogEvent(
+                BigInt(logObj.getBlockNumber),
+                logObj.getTransactionHash,
+                logObj.getLogIndex.longValueExact,
+                typedEvent
+              )
+            }
+          }
+        }
+      )
     } yield typedEvents.toList
-
 }
 
 object Web3Service {
