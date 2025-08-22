@@ -1,4 +1,4 @@
-scalaVersion := "3.3.1"
+scalaVersion := "3.3.6"
 
 ThisBuild / name := "eth-tailz"
 
