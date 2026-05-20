@@ -147,22 +147,22 @@ This is the standard Scala 3 trick for **partial type-parameter application**: `
 
 ```scala
 private val resolvers: Map[String, LogObject => TypedEvent] = Map(
-  // 36 trivial 1:1 cases — auto-derived
+  // ~44 cases — all auto-derived (case-class fields match the ABI response field names)
   "CollateralRatioUpdated" -> auto[CollateralRatioUpdated](getCollateralRatioUpdatedEventFromLog),
   "OrderAdded"             -> auto[OrderAdded](getOrderAddedEventFromLog),
+  "RoleUpdated"            -> auto[RoleUpdated](getRoleUpdatedEventFromLog),
   ...
 
-  // 9 cases with field renames — explicit but still one-line-ish
-  "RoleUpdated" -> custom(getRoleUpdatedEventFromLog)(e =>
-    RoleUpdated(objectId = e.objectId, contextId = e.contextId,
-                roleId = e.assignedRoleId, funcName = e.functionName)),
-
-  // 1 case with extra logic (zip + map)
+  // 1 case with extra logic (zip parallel arrays into a list of records)
   "FeeScheduleAdded" -> custom(getFeeScheduleAddedEventFromLog) { e => ... }
 )
 ```
 
-~290 lines of `match` → ~65 lines of registry.
+~290 lines of `match` → ~55 lines of registry.
+
+### Why renaming was the final cleanup
+
+Originally a handful of events had case classes whose field names disagreed with the ABI (`roleId` vs `assignedRoleId`, `funcName` vs `functionName`, `hash` vs `dataHash`, etc.). Those required a per-event `custom` registration to do the rename. We aligned the case-class fields with the response fields, which collapses every rename into the auto-derived path. The only remaining `custom` case is `FeeScheduleAdded`, where the shape itself differs — the source has a nested `feeSchedule` struct with two parallel arrays that need to be zipped into `List[FeeReceiver]`. That's a real semantic transformation, not a name mismatch, so keeping it explicit is appropriate.
 
 ## What we get beyond fewer lines
 

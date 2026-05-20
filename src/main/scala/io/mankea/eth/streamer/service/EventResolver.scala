@@ -111,13 +111,13 @@ case class FeeScheduleAdded(entityId: Bytes32String, feeType: Int, feeReceivers:
 // case class FunctionsLocked(selectors: List[String]) extends TypedEvent
 // case class FunctionsUnlocked(selectors: List[String]) extends TypedEvent
 case class InitializeDiamond(sender: AddressString) extends TypedEvent
-case class InternalTokenBalanceUpdate(ownerId: Bytes32String, tokenId: Bytes32String, newAmount: BigInt, funcName: String, sender: AddressString) extends TypedEvent
-case class InternalTokenSupplyUpdate(tokenId: Bytes32String, newTokenSupply: BigInt, funcName: String, sender: AddressString) extends TypedEvent
+case class InternalTokenBalanceUpdate(ownerId: Bytes32String, tokenId: Bytes32String, newAmountOwned: BigInt, functionName: String, msgSender: AddressString) extends TypedEvent
+case class InternalTokenSupplyUpdate(tokenId: Bytes32String, newTokenSupply: BigInt, functionName: String, msgSender: AddressString) extends TypedEvent
 case class MakerBasisPointsUpdated(tradingCommissionMakerBP: Int) extends TypedEvent
 case class MaxDividendDenominationsUpdated(oldMax: Int, newMax: Int) extends TypedEvent
 case class MinimumSellUpdated(objectId: Bytes32String, minimumSell: BigInt) extends TypedEvent
-case class ObjectCreated(objectId: Bytes32String, parentId: Bytes32String, hash: Bytes32String) extends TypedEvent
-case class ObjectUpdated(objectId: Bytes32String, parentId: Bytes32String, hash: Bytes32String) extends TypedEvent
+case class ObjectCreated(objectId: Bytes32String, parentId: Bytes32String, dataHash: Bytes32String) extends TypedEvent
+case class ObjectUpdated(objectId: Bytes32String, parentId: Bytes32String, dataHash: Bytes32String) extends TypedEvent
 case class OrderAdded(orderId: Long, maker: Bytes32String, sellToken: Bytes32String, sellAmount: BigInt, sellAmountInitial: BigInt, buyToken: Bytes32String, buyAmount: BigInt, buyAmountInitial: BigInt, state: Int) extends TypedEvent
 case class OrderCancelled(orderId: Long, taker: Bytes32String, sellToken: Bytes32String) extends TypedEvent
 case class OrderExecuted(orderId: Long, taker: Bytes32String, sellToken: Bytes32String, sellAmount: BigInt, buyToken: Bytes32String, buyAmount: BigInt, state: Int) extends TypedEvent
@@ -125,7 +125,7 @@ case class OrderMatched(orderId: Long, matchedWithId: Long, sellAmountMatched: B
 case class OwnershipTransferred(previousOwner: AddressString, newOwner: AddressString) extends TypedEvent
 case class RoleCanAssignUpdated(role: String, group: String) extends TypedEvent
 case class RoleGroupUpdated(role: String, group: String, roleInGroup: Boolean) extends TypedEvent
-case class RoleUpdated(objectId: Bytes32String, contextId: Bytes32String, roleId: Bytes32String, funcName: String) extends TypedEvent
+case class RoleUpdated(objectId: Bytes32String, contextId: Bytes32String, assignedRoleId: Bytes32String, functionName: String) extends TypedEvent
 case class SelfOnboardingCompleted(userAddress: AddressString) extends TypedEvent
 case class SimplePolicyCancelled(id: Bytes32String) extends TypedEvent
 case class SimplePolicyClaimPaid(claimId: Bytes32String, policyId: Bytes32String, insuredId: Bytes32String, amount: BigInt) extends TypedEvent
@@ -134,7 +134,7 @@ case class SimplePolicyMatured(id: Bytes32String) extends TypedEvent
 case class SimplePolicyPremiumPaid(id: Bytes32String, amount: BigInt) extends TypedEvent
 case class SupportedTokenAdded(tokenAddress: AddressString) extends TypedEvent
 case class TokenInfoUpdated(objectId: Bytes32String, symbol: String, name: String) extends TypedEvent
-case class TokenizationEnabled(objectId: Bytes32String, symbol: String, name: String) extends TypedEvent
+case class TokenizationEnabled(objectId: Bytes32String, tokenSymbol: String, tokenName: String) extends TypedEvent
 case class TokenRewardCollected(stakerId: Bytes32String, entityId: Bytes32String, tokenId: Bytes32String, interval: Int, rewardCurrency: Bytes32String, rewardAmount: BigInt) extends TypedEvent
 case class TokenRewardPaid(guid: Bytes32String, entityId: Bytes32String, tokenId: Bytes32String, rewardTokenId: Bytes32String, rewardAmount: BigInt) extends TypedEvent
 case class TokenSaleStarted(entityId: Bytes32String, offerId: Long, tokenSymbol: String, tokenName: String) extends TypedEvent
@@ -142,7 +142,7 @@ case class TokenStaked(stakerId: Bytes32String, entityId: Bytes32String, tokenId
 case class TokenStakingStarted(entityId: Bytes32String, tokenId: Bytes32String, initDate: Instant, a: Long, r: Long, divider: Long, interval: Int) extends TypedEvent
 case class TokenUnstaked(stakerId: Bytes32String, entityId: Bytes32String, tokenId: Bytes32String, amount: BigInt) extends TypedEvent
 case class UpdateUpgradeExpiration(duration: BigInt) extends TypedEvent // TODO
-case class TokenWrapped(id: Bytes32String, wrapper: AddressString) extends TypedEvent
+case class TokenWrapped(entityId: Bytes32String, tokenWrapper: AddressString) extends TypedEvent
 case class UpgradeExpiration(duration: BigInt) extends TypedEvent
 case class UpgradeCancelled(id: Bytes32String, who: AddressString) extends TypedEvent
 case class Unsupported(topic: String) extends TypedEvent
@@ -251,15 +251,15 @@ case class EventResolverImpl() extends EventResolver {
     "TokenStakingStarted"             -> auto[TokenStakingStarted](getTokenStakingStartedEventFromLog),
     "TokenUnstaked"                   -> auto[TokenUnstaked](getTokenUnstakedEventFromLog),
     "UpgradeCancelled"                -> auto[UpgradeCancelled](getUpgradeCancelledEventFromLog),
-    "TokenWrapped"                -> custom(getTokenWrappedEventFromLog)(e => TokenWrapped(id = e.entityId, wrapper = e.tokenWrapper)),
-    "TokenizationEnabled"         -> custom(getTokenizationEnabledEventFromLog)(e =>TokenizationEnabled(objectId = e.objectId, symbol = e.tokenSymbol, name = e.tokenName)),
-    "RoleUpdated"                 -> custom(getRoleUpdatedEventFromLog)(e => RoleUpdated(objectId = e.objectId, contextId = e.contextId, roleId = e.assignedRoleId, funcName = e.functionName)),
-    "InternalTokenBalanceUpdate"  -> custom(getInternalTokenBalanceUpdateEventFromLog)(e => InternalTokenBalanceUpdate(ownerId = e.ownerId, tokenId = e.tokenId, newAmount = e.newAmountOwned, funcName = e.functionName, sender = e.msgSender)),
-    "InternalTokenSupplyUpdate"   -> custom(getInternalTokenSupplyUpdateEventFromLog)(e => InternalTokenSupplyUpdate(tokenId = e.tokenId, newTokenSupply = e.newTokenSupply, funcName = e.functionName, sender = e.msgSender)),
-    "ObjectCreated"               -> custom(getObjectCreatedEventFromLog)(e => ObjectCreated(objectId = e.objectId, parentId = e.parentId, hash = e.dataHash)),
-    "ObjectUpdated"               -> custom(getObjectUpdatedEventFromLog)(e => ObjectUpdated(objectId = e.objectId, parentId = e.parentId, hash = e.dataHash)),
-    "UpgradeExpiration"           -> custom(getUpdateUpgradeExpirationEventFromLog)(e => UpgradeExpiration(duration = e.duration)),
-    "FeeScheduleAdded"            -> custom(getFeeScheduleAddedEventFromLog) { e =>
+    "TokenWrapped"                    -> auto[TokenWrapped](getTokenWrappedEventFromLog),
+    "TokenizationEnabled"             -> auto[TokenizationEnabled](getTokenizationEnabledEventFromLog),
+    "RoleUpdated"                     -> auto[RoleUpdated](getRoleUpdatedEventFromLog),
+    "InternalTokenBalanceUpdate"      -> auto[InternalTokenBalanceUpdate](getInternalTokenBalanceUpdateEventFromLog),
+    "InternalTokenSupplyUpdate"       -> auto[InternalTokenSupplyUpdate](getInternalTokenSupplyUpdateEventFromLog),
+    "ObjectCreated"                   -> auto[ObjectCreated](getObjectCreatedEventFromLog),
+    "ObjectUpdated"                   -> auto[ObjectUpdated](getObjectUpdatedEventFromLog),
+    "UpgradeExpiration"               -> auto[UpgradeExpiration](getUpdateUpgradeExpirationEventFromLog),
+    "FeeScheduleAdded"                -> custom(getFeeScheduleAddedEventFromLog) { e =>
       val feeReceivers = e.feeSchedule.receiver.getValue.asScala
         .zip(e.feeSchedule.basisPoints.getValue.asScala)
         .map((r, bp) => FeeReceiver(r, bp))
