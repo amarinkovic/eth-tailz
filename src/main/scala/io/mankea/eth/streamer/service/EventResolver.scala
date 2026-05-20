@@ -356,10 +356,11 @@ case class EventResolverImpl() extends EventResolver {
             name = NaymsDiamond.getTokenInfoUpdatedEventFromLog(obj).name
           )
         case "TokenizationEnabled" =>
+          val event = NaymsDiamond.getTokenizationEnabledEventFromLog(obj)
           TokenizationEnabled(
-            objectId = NaymsDiamond.getTokenInfoUpdatedEventFromLog(obj).objectId,
-            symbol = NaymsDiamond.getTokenInfoUpdatedEventFromLog(obj).symbol,
-            name = NaymsDiamond.getTokenInfoUpdatedEventFromLog(obj).name
+            objectId = event.objectId,
+            symbol = event.tokenSymbol,
+            name = event.tokenName
           )
         case "OrderAdded" =>
           OrderAdded(
@@ -391,10 +392,11 @@ case class EventResolverImpl() extends EventResolver {
             buyAmountMatched = NaymsDiamond.getOrderMatchedEventFromLog(obj).buyAmountMatched
           )
         case "OrderCancelled" =>
+          val event = NaymsDiamond.getOrderCancelledEventFromLog(obj)
           OrderCancelled(
-            orderId = NaymsDiamond.getOrderExecutedEventFromLog(obj).orderId,
-            taker = NaymsDiamond.getOrderExecutedEventFromLog(obj).taker,
-            sellToken = NaymsDiamond.getOrderExecutedEventFromLog(obj).sellToken
+            orderId = event.orderId,
+            taker = event.taker,
+            sellToken = event.sellToken
           )
         case "InternalTokenBalanceUpdate" =>
           InternalTokenBalanceUpdate(
