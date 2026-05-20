@@ -47,7 +47,7 @@ import io.nayms.contracts.generated.NaymsDiamond.{
   TOKENWRAPPED_EVENT,
   UPGRADECANCELLED_EVENT
 }
-import org.web3j.abi.{EventEncoder}
+import org.web3j.abi.EventEncoder
 import org.web3j.abi.datatypes.generated.{Bytes32, Uint256, Uint64, Uint16, Uint8}
 import org.web3j.abi.datatypes.{Bool, Event, Utf8String}
 import org.web3j.protocol.core.methods.response.EthLog.LogObject
@@ -202,304 +202,75 @@ case class EventResolverImpl() extends EventResolver {
 
   private def getName(topic: String): String = eventMap.get(topic).map(_.getName).getOrElse(topic)
 
-  def getTypedEvent(obj: LogObject): Task[TypedEvent] = {
+  import NaymsDiamond.*
+  import scala.deriving.Mirror
 
-    val topic = obj.getTopics.get(0)
+  private class AutoBuilder[T <: TypedEvent & Product] {
+    inline def apply[E](get: LogObject => E)(using m: Mirror.ProductOf[T]): LogObject => TypedEvent =
+      obj => AutoMap.from[E, T](get(obj))
+  }
+  private inline def auto[T <: TypedEvent & Product]: AutoBuilder[T] = new AutoBuilder[T]
 
-    ZIO.attempt {
-      getName(topic) match
-        case "CollateralRatioUpdated" =>
-          val event = NaymsDiamond.getCollateralRatioUpdatedEventFromLog(obj)
-          CollateralRatioUpdated(
-            entityId = event.entityId,
-            collateralRatio = event.collateralRatio,
-            utilizedCapacity = event.utilizedCapacity
-          )
-        case "CreateUpgrade" =>
-          val event = NaymsDiamond.getCreateUpgradeEventFromLog(obj)
-          CreateUpgrade(
-            id = event.id,
-            who = event.who
-          )
-        case "DividendDistribution" =>
-          val event = NaymsDiamond.getDividendDistributionEventFromLog(obj)
-          DividendDistribution(
-            guid = event .guid,
-            from = event .from,
-            to = event .to,
-            dividendTokenId = event .dividendTokenId,
-            amount = event .amount
-          )
-        case "DividendWithdrawn" =>
-          val event = NaymsDiamond.getDividendWithdrawnEventFromLog(obj)
-          DividendWithdrawn(
-            accountId = event.accountId,
-            tokenId = event.tokenId,
-            amountOwned = event.amountOwned,
-            dividendTokenId = event.dividendTokenId,
-            dividendAmountWithdrawn = event.dividendAmountWithdrawn
-          )
-        case "TokenSaleStarted" =>
-          TokenSaleStarted(
-            entityId = NaymsDiamond.getTokenSaleStartedEventFromLog(obj).entityId,
-            offerId = NaymsDiamond.getTokenSaleStartedEventFromLog(obj).offerId,
-            tokenSymbol = NaymsDiamond.getTokenSaleStartedEventFromLog(obj).tokenSymbol,
-            tokenName = NaymsDiamond.getTokenSaleStartedEventFromLog(obj).tokenName
-          )
-        case "TokenWrapped" =>
-          TokenWrapped(
-            id = NaymsDiamond.getTokenWrappedEventFromLog(obj).entityId,
-            wrapper = NaymsDiamond.getTokenWrappedEventFromLog(obj).tokenWrapper // TODO: rename
-          )
-        case "SimplePolicyCreated" =>
-          SimplePolicyCreated(
-            id = NaymsDiamond.getSimplePolicyCreatedEventFromLog(obj).id,
-            entityId = NaymsDiamond.getSimplePolicyCreatedEventFromLog(obj).entityId
-          )
-        case "SimplePolicyPremiumPaid" =>
-          SimplePolicyPremiumPaid(
-            id = NaymsDiamond.getSimplePolicyPremiumPaidEventFromLog(obj).id,
-            amount = NaymsDiamond.getSimplePolicyPremiumPaidEventFromLog(obj).amount
-          )
-        case "SimplePolicyClaimPaid" =>
-          SimplePolicyClaimPaid(
-            claimId = NaymsDiamond.getSimplePolicyClaimPaidEventFromLog(obj).claimId,
-            policyId = NaymsDiamond.getSimplePolicyClaimPaidEventFromLog(obj).policyId,
-            insuredId = NaymsDiamond.getSimplePolicyClaimPaidEventFromLog(obj).insuredId,
-            amount = NaymsDiamond.getSimplePolicyClaimPaidEventFromLog(obj).amount
-          )
-        case "SimplePolicyMatured" =>
-          SimplePolicyMatured(
-            id = NaymsDiamond.getSimplePolicyMaturedEventFromLog(obj).id
-          )
-        case "SimplePolicyCancelled" =>
-          SimplePolicyCancelled(
-            id = NaymsDiamond.getSimplePolicyCancelledEventFromLog(obj).id
-          )
-        case "EntityCreated" =>
-          EntityCreated(
-            entityId = NaymsDiamond.getEntityCreatedEventFromLog(obj).entityId,
-            entityAdmin = NaymsDiamond.getEntityCreatedEventFromLog(obj).entityAdmin
-          )
-        case "EntityUpdated" =>
-          EntityUpdated(
-            entityId = NaymsDiamond.getEntityUpdatedEventFromLog(obj).entityId
-          )
-        case "ExternalDeposit" =>
-          ExternalDeposit(
-            receiverId = NaymsDiamond.getExternalDepositEventFromLog(obj).receiverId,
-            externalTokenAddress = NaymsDiamond.getExternalDepositEventFromLog(obj).externalTokenAddress,
-            amount = NaymsDiamond.getExternalDepositEventFromLog(obj).amount
-          )
-        case "ExternalWithdraw" =>
-          ExternalWithdraw(
-            entityId = NaymsDiamond.getExternalWithdrawEventFromLog(obj).entityId,
-            receiver = NaymsDiamond.getExternalWithdrawEventFromLog(obj).receiver,
-            externalTokenAddress = NaymsDiamond.getExternalWithdrawEventFromLog(obj).externalTokenAddress,
-            amount = NaymsDiamond.getExternalWithdrawEventFromLog(obj).amount
-          )
-        case "FeePaid" =>
-          FeePaid(
-            fromId = NaymsDiamond.getFeePaidEventFromLog(obj).fromId,
-            toId = NaymsDiamond.getFeePaidEventFromLog(obj).toId,
-            tokenId = NaymsDiamond.getFeePaidEventFromLog(obj).tokenId,
-            amount = NaymsDiamond.getFeePaidEventFromLog(obj).amount,
-            feeType = NaymsDiamond.getFeePaidEventFromLog(obj).feeType
-          )
-        case "FeeScheduleRemoved" =>
-          FeeScheduleRemoved(
-            entityId = NaymsDiamond.getFeeScheduleRemovedEventFromLog(obj).entityId,
-            feeType = NaymsDiamond.getFeeScheduleRemovedEventFromLog(obj).feeType
-          )
-        case "FeeScheduleAdded" =>
-          val event = NaymsDiamond.getFeeScheduleAddedEventFromLog(obj)
-          val feeReceivers = for {
-              r <- event.feeSchedule.receiver.getValue.asScala
-              bp <- event.feeSchedule.basisPoints.getValue.asScala
-            } yield FeeReceiver(r, bp)
+  private def custom[E, T <: TypedEvent](get: LogObject => E)(build: E => T): LogObject => TypedEvent =
+    obj => build(get(obj))
 
-          FeeScheduleAdded(
-            entityId = event.entityId,
-            feeType = event.feeType,
-            feeReceivers = feeReceivers.toList
-          )
-        case "RoleUpdated" =>
-          RoleUpdated(
-            objectId = NaymsDiamond.getRoleUpdatedEventFromLog(obj).objectId,
-            contextId = NaymsDiamond.getRoleUpdatedEventFromLog(obj).contextId,
-            roleId = NaymsDiamond.getRoleUpdatedEventFromLog(obj).assignedRoleId, // TODO: rename
-            funcName = NaymsDiamond.getRoleUpdatedEventFromLog(obj).functionName // TODO: rename
-          )
-        case "RoleGroupUpdated" =>
-          RoleGroupUpdated(
-            role = NaymsDiamond.getRoleGroupUpdatedEventFromLog(obj).role,
-            group = NaymsDiamond.getRoleGroupUpdatedEventFromLog(obj).group,
-            roleInGroup = NaymsDiamond.getRoleGroupUpdatedEventFromLog(obj).roleInGroup
-          )
-        case "RoleCanAssignUpdated" =>
-          RoleCanAssignUpdated(
-            role = NaymsDiamond.getRoleCanAssignUpdatedEventFromLog(obj).role,
-            group = NaymsDiamond.getRoleCanAssignUpdatedEventFromLog(obj).group
-          )
-        case "SelfOnboardingCompleted" =>
-          SelfOnboardingCompleted(
-            userAddress = NaymsDiamond.getSelfOnboardingCompletedEventFromLog(obj).userAddress
-          )
-        case "SupportedTokenAdded" =>
-          SupportedTokenAdded(
-            tokenAddress = NaymsDiamond.getSupportedTokenAddedEventFromLog(obj).tokenAddress
-          )
-        case "TokenInfoUpdated" =>
-          TokenInfoUpdated(
-            objectId = NaymsDiamond.getTokenInfoUpdatedEventFromLog(obj).objectId,
-            symbol = NaymsDiamond.getTokenInfoUpdatedEventFromLog(obj).symbol,
-            name = NaymsDiamond.getTokenInfoUpdatedEventFromLog(obj).name
-          )
-        case "TokenizationEnabled" =>
-          val event = NaymsDiamond.getTokenizationEnabledEventFromLog(obj)
-          TokenizationEnabled(
-            objectId = event.objectId,
-            symbol = event.tokenSymbol,
-            name = event.tokenName
-          )
-        case "OrderAdded" =>
-          OrderAdded(
-            orderId = NaymsDiamond.getOrderAddedEventFromLog(obj).orderId,
-            maker = NaymsDiamond.getOrderAddedEventFromLog(obj).maker,
-            sellToken = NaymsDiamond.getOrderAddedEventFromLog(obj).sellToken,
-            sellAmount = NaymsDiamond.getOrderAddedEventFromLog(obj).sellAmount,
-            sellAmountInitial = NaymsDiamond.getOrderAddedEventFromLog(obj).sellAmountInitial,
-            buyToken = NaymsDiamond.getOrderAddedEventFromLog(obj).buyToken,
-            buyAmount = NaymsDiamond.getOrderAddedEventFromLog(obj).buyAmount,
-            buyAmountInitial = NaymsDiamond.getOrderAddedEventFromLog(obj).buyAmountInitial,
-            state = NaymsDiamond.getOrderAddedEventFromLog(obj).state
-          )
-        case "OrderExecuted" =>
-          OrderExecuted(
-            orderId = NaymsDiamond.getOrderExecutedEventFromLog(obj).orderId,
-            taker = NaymsDiamond.getOrderExecutedEventFromLog(obj).taker,
-            sellToken = NaymsDiamond.getOrderExecutedEventFromLog(obj).sellToken,
-            sellAmount = NaymsDiamond.getOrderExecutedEventFromLog(obj).sellAmount,
-            buyToken = NaymsDiamond.getOrderExecutedEventFromLog(obj).buyToken,
-            buyAmount = NaymsDiamond.getOrderExecutedEventFromLog(obj).buyAmount,
-            state = NaymsDiamond.getOrderExecutedEventFromLog(obj).state
-          )
-        case "OrderMatched" =>
-          OrderMatched(
-            orderId = NaymsDiamond.getOrderMatchedEventFromLog(obj).orderId,
-            matchedWithId = NaymsDiamond.getOrderMatchedEventFromLog(obj).matchedWithId,
-            sellAmountMatched = NaymsDiamond.getOrderMatchedEventFromLog(obj).sellAmountMatched,
-            buyAmountMatched = NaymsDiamond.getOrderMatchedEventFromLog(obj).buyAmountMatched
-          )
-        case "OrderCancelled" =>
-          val event = NaymsDiamond.getOrderCancelledEventFromLog(obj)
-          OrderCancelled(
-            orderId = event.orderId,
-            taker = event.taker,
-            sellToken = event.sellToken
-          )
-        case "InternalTokenBalanceUpdate" =>
-          InternalTokenBalanceUpdate(
-            ownerId = NaymsDiamond.getInternalTokenBalanceUpdateEventFromLog(obj).ownerId,
-            tokenId = NaymsDiamond.getInternalTokenBalanceUpdateEventFromLog(obj).tokenId,
-            newAmount = NaymsDiamond.getInternalTokenBalanceUpdateEventFromLog(obj).newAmountOwned, // TODO: rename
-            funcName = NaymsDiamond.getInternalTokenBalanceUpdateEventFromLog(obj).functionName, // TODO: rename
-            sender = NaymsDiamond.getInternalTokenBalanceUpdateEventFromLog(obj).msgSender // TODO: rename
-          )
-        case "InternalTokenSupplyUpdate" =>
-          InternalTokenSupplyUpdate(
-            tokenId = NaymsDiamond.getInternalTokenSupplyUpdateEventFromLog(obj).tokenId,
-            newTokenSupply = NaymsDiamond.getInternalTokenSupplyUpdateEventFromLog(obj).newTokenSupply,
-            funcName = NaymsDiamond.getInternalTokenSupplyUpdateEventFromLog(obj).functionName, // TODO: rename
-            sender = NaymsDiamond.getInternalTokenSupplyUpdateEventFromLog(obj).msgSender
-          )
-        case "MakerBasisPointsUpdated" =>
-          MakerBasisPointsUpdated(
-            tradingCommissionMakerBP = NaymsDiamond.getMakerBasisPointsUpdatedEventFromLog(obj).tradingCommissionMakerBP
-          )
-        case "MaxDividendDenominationsUpdated" =>
-          MaxDividendDenominationsUpdated(
-            oldMax = NaymsDiamond.getMaxDividendDenominationsUpdatedEventFromLog(obj).oldMax,
-            newMax = NaymsDiamond.getMaxDividendDenominationsUpdatedEventFromLog(obj).newMax
-          )
-        case "MinimumSellUpdated" =>
-          MinimumSellUpdated(
-            objectId = NaymsDiamond.getMinimumSellUpdatedEventFromLog(obj).objectId,
-            minimumSell = NaymsDiamond.getMinimumSellUpdatedEventFromLog(obj).minimumSell
-          )
-        case "ObjectCreated" =>
-          ObjectCreated(
-            objectId = NaymsDiamond.getObjectCreatedEventFromLog(obj).objectId,
-            parentId = NaymsDiamond.getObjectCreatedEventFromLog(obj).parentId,
-            hash = NaymsDiamond.getObjectCreatedEventFromLog(obj).dataHash // TODO: rename
-          )
-        case "ObjectUpdated" =>
-          ObjectUpdated(
-            objectId = NaymsDiamond.getObjectUpdatedEventFromLog(obj).objectId,
-            parentId = NaymsDiamond.getObjectUpdatedEventFromLog(obj).parentId,
-            hash = NaymsDiamond.getObjectUpdatedEventFromLog(obj).dataHash // TODO: rename
-          )
-        case "OwnershipTransferred" =>
-          OwnershipTransferred(
-            previousOwner = NaymsDiamond.getOwnershipTransferredEventFromLog(obj).previousOwner,
-            newOwner = NaymsDiamond.getOwnershipTransferredEventFromLog(obj).newOwner
-          )
-        case "InitializeDiamond" =>
-          InitializeDiamond(
-            sender = NaymsDiamond.getInitializeDiamondEventFromLog(obj).sender
-          )
-        case "UpgradeExpiration" =>
-          UpgradeExpiration(
-            duration = NaymsDiamond.getUpdateUpgradeExpirationEventFromLog(obj).duration
-          )
-        case "UpgradeCancelled" =>
-          UpgradeCancelled(
-            id = NaymsDiamond.getUpgradeCancelledEventFromLog(obj).id,
-            who = NaymsDiamond.getUpgradeCancelledEventFromLog(obj).who
-          )
-        case "TokenRewardCollected" =>
-          TokenRewardCollected(
-            stakerId = NaymsDiamond.getTokenRewardCollectedEventFromLog(obj).stakerId,
-            entityId = NaymsDiamond.getTokenRewardCollectedEventFromLog(obj).entityId,
-            tokenId = NaymsDiamond.getTokenRewardCollectedEventFromLog(obj).tokenId,
-            interval = NaymsDiamond.getTokenRewardCollectedEventFromLog(obj).interval,
-            rewardCurrency = NaymsDiamond.getTokenRewardCollectedEventFromLog(obj).rewardCurrency,
-            rewardAmount = NaymsDiamond.getTokenRewardCollectedEventFromLog(obj).rewardAmount
-          )
-        case "TokenRewardPaid" =>
-          TokenRewardPaid(
-            guid = NaymsDiamond.getTokenRewardPaidEventFromLog(obj).guid,
-            entityId = NaymsDiamond.getTokenRewardPaidEventFromLog(obj).entityId,
-            tokenId = NaymsDiamond.getTokenRewardPaidEventFromLog(obj).tokenId,
-            rewardTokenId = NaymsDiamond.getTokenRewardPaidEventFromLog(obj).rewardTokenId,
-            rewardAmount = NaymsDiamond.getTokenRewardPaidEventFromLog(obj).rewardAmount
-          )
-        case "TokenStaked" =>
-          TokenStaked(
-            stakerId = NaymsDiamond.getTokenStakedEventFromLog(obj).stakerId,
-            entityId = NaymsDiamond.getTokenStakedEventFromLog(obj).entityId,
-            tokenId = NaymsDiamond.getTokenStakedEventFromLog(obj).tokenId,
-            amount = NaymsDiamond.getTokenStakedEventFromLog(obj).amount
-          )
-        case "TokenStakingStarted" =>
-          TokenStakingStarted(
-            entityId = NaymsDiamond.getTokenStakingStartedEventFromLog(obj).entityId,
-            tokenId = NaymsDiamond.getTokenStakingStartedEventFromLog(obj).tokenId,
-            initDate = NaymsDiamond.getTokenStakingStartedEventFromLog(obj).initDate,
-            a = NaymsDiamond.getTokenStakingStartedEventFromLog(obj).a,
-            r = NaymsDiamond.getTokenStakingStartedEventFromLog(obj).r,
-            divider = NaymsDiamond.getTokenStakingStartedEventFromLog(obj).divider,
-            interval = NaymsDiamond.getTokenStakingStartedEventFromLog(obj).interval
-          )
-        case "TokenUnstaked" =>
-          TokenUnstaked(
-            stakerId = NaymsDiamond.getTokenUnstakedEventFromLog(obj).stakerId,
-            entityId = NaymsDiamond.getTokenUnstakedEventFromLog(obj).entityId,
-            tokenId = NaymsDiamond.getTokenUnstakedEventFromLog(obj).tokenId,
-            amount = NaymsDiamond.getTokenUnstakedEventFromLog(obj).amount
-          )
-        case _ => Unsupported(getName(topic))
+  private val resolvers: Map[String, LogObject => TypedEvent] = Map(
+    "CollateralRatioUpdated"          -> auto[CollateralRatioUpdated](getCollateralRatioUpdatedEventFromLog),
+    "CreateUpgrade"                   -> auto[CreateUpgrade](getCreateUpgradeEventFromLog),
+    "DividendDistribution"            -> auto[DividendDistribution](getDividendDistributionEventFromLog),
+    "DividendWithdrawn"               -> auto[DividendWithdrawn](getDividendWithdrawnEventFromLog),
+    "EntityCreated"                   -> auto[EntityCreated](getEntityCreatedEventFromLog),
+    "EntityUpdated"                   -> auto[EntityUpdated](getEntityUpdatedEventFromLog),
+    "ExternalDeposit"                 -> auto[ExternalDeposit](getExternalDepositEventFromLog),
+    "ExternalWithdraw"                -> auto[ExternalWithdraw](getExternalWithdrawEventFromLog),
+    "FeePaid"                         -> auto[FeePaid](getFeePaidEventFromLog),
+    "FeeScheduleRemoved"              -> auto[FeeScheduleRemoved](getFeeScheduleRemovedEventFromLog),
+    "InitializeDiamond"               -> auto[InitializeDiamond](getInitializeDiamondEventFromLog),
+    "MakerBasisPointsUpdated"         -> auto[MakerBasisPointsUpdated](getMakerBasisPointsUpdatedEventFromLog),
+    "MaxDividendDenominationsUpdated" -> auto[MaxDividendDenominationsUpdated](getMaxDividendDenominationsUpdatedEventFromLog),
+    "MinimumSellUpdated"              -> auto[MinimumSellUpdated](getMinimumSellUpdatedEventFromLog),
+    "OrderAdded"                      -> auto[OrderAdded](getOrderAddedEventFromLog),
+    "OrderCancelled"                  -> auto[OrderCancelled](getOrderCancelledEventFromLog),
+    "OrderExecuted"                   -> auto[OrderExecuted](getOrderExecutedEventFromLog),
+    "OrderMatched"                    -> auto[OrderMatched](getOrderMatchedEventFromLog),
+    "OwnershipTransferred"            -> auto[OwnershipTransferred](getOwnershipTransferredEventFromLog),
+    "RoleCanAssignUpdated"            -> auto[RoleCanAssignUpdated](getRoleCanAssignUpdatedEventFromLog),
+    "RoleGroupUpdated"                -> auto[RoleGroupUpdated](getRoleGroupUpdatedEventFromLog),
+    "SelfOnboardingCompleted"         -> auto[SelfOnboardingCompleted](getSelfOnboardingCompletedEventFromLog),
+    "SimplePolicyCancelled"           -> auto[SimplePolicyCancelled](getSimplePolicyCancelledEventFromLog),
+    "SimplePolicyClaimPaid"           -> auto[SimplePolicyClaimPaid](getSimplePolicyClaimPaidEventFromLog),
+    "SimplePolicyCreated"             -> auto[SimplePolicyCreated](getSimplePolicyCreatedEventFromLog),
+    "SimplePolicyMatured"             -> auto[SimplePolicyMatured](getSimplePolicyMaturedEventFromLog),
+    "SimplePolicyPremiumPaid"         -> auto[SimplePolicyPremiumPaid](getSimplePolicyPremiumPaidEventFromLog),
+    "SupportedTokenAdded"             -> auto[SupportedTokenAdded](getSupportedTokenAddedEventFromLog),
+    "TokenInfoUpdated"                -> auto[TokenInfoUpdated](getTokenInfoUpdatedEventFromLog),
+    "TokenRewardCollected"            -> auto[TokenRewardCollected](getTokenRewardCollectedEventFromLog),
+    "TokenRewardPaid"                 -> auto[TokenRewardPaid](getTokenRewardPaidEventFromLog),
+    "TokenSaleStarted"                -> auto[TokenSaleStarted](getTokenSaleStartedEventFromLog),
+    "TokenStaked"                     -> auto[TokenStaked](getTokenStakedEventFromLog),
+    "TokenStakingStarted"             -> auto[TokenStakingStarted](getTokenStakingStartedEventFromLog),
+    "TokenUnstaked"                   -> auto[TokenUnstaked](getTokenUnstakedEventFromLog),
+    "UpgradeCancelled"                -> auto[UpgradeCancelled](getUpgradeCancelledEventFromLog),
+    "TokenWrapped"                -> custom(getTokenWrappedEventFromLog)(e => TokenWrapped(id = e.entityId, wrapper = e.tokenWrapper)),
+    "TokenizationEnabled"         -> custom(getTokenizationEnabledEventFromLog)(e =>TokenizationEnabled(objectId = e.objectId, symbol = e.tokenSymbol, name = e.tokenName)),
+    "RoleUpdated"                 -> custom(getRoleUpdatedEventFromLog)(e => RoleUpdated(objectId = e.objectId, contextId = e.contextId, roleId = e.assignedRoleId, funcName = e.functionName)),
+    "InternalTokenBalanceUpdate"  -> custom(getInternalTokenBalanceUpdateEventFromLog)(e => InternalTokenBalanceUpdate(ownerId = e.ownerId, tokenId = e.tokenId, newAmount = e.newAmountOwned, funcName = e.functionName, sender = e.msgSender)),
+    "InternalTokenSupplyUpdate"   -> custom(getInternalTokenSupplyUpdateEventFromLog)(e => InternalTokenSupplyUpdate(tokenId = e.tokenId, newTokenSupply = e.newTokenSupply, funcName = e.functionName, sender = e.msgSender)),
+    "ObjectCreated"               -> custom(getObjectCreatedEventFromLog)(e => ObjectCreated(objectId = e.objectId, parentId = e.parentId, hash = e.dataHash)),
+    "ObjectUpdated"               -> custom(getObjectUpdatedEventFromLog)(e => ObjectUpdated(objectId = e.objectId, parentId = e.parentId, hash = e.dataHash)),
+    "UpgradeExpiration"           -> custom(getUpdateUpgradeExpirationEventFromLog)(e => UpgradeExpiration(duration = e.duration)),
+    "FeeScheduleAdded"            -> custom(getFeeScheduleAddedEventFromLog) { e =>
+      val feeReceivers = e.feeSchedule.receiver.getValue.asScala
+        .zip(e.feeSchedule.basisPoints.getValue.asScala)
+        .map((r, bp) => FeeReceiver(r, bp))
+        .toList
+      FeeScheduleAdded(entityId = e.entityId, feeType = e.feeType, feeReceivers = feeReceivers)
     }
+  )
+
+  def getTypedEvent(obj: LogObject): Task[TypedEvent] = ZIO.attempt {
+    val name = getName(obj.getTopics.get(0))
+    resolvers.get(name).fold[TypedEvent](Unsupported(name))(_(obj))
   }
 }
 
