@@ -107,7 +107,7 @@ case class ExternalDeposit(receiverId: Bytes32String, externalTokenAddress: Addr
 case class ExternalWithdraw(entityId: Bytes32String, receiver: AddressString, externalTokenAddress: AddressString, amount: BigInt) extends TypedEvent
 case class FeePaid(fromId: Bytes32String, toId: Bytes32String, tokenId: Bytes32String, amount: BigInt, feeType: Int) extends TypedEvent
 case class FeeScheduleRemoved(entityId: Bytes32String, feeType: BigInt) extends TypedEvent
-case class FeeScheduleAdded(entityId: Bytes32String, feeType: Int, feeReceivers: List[FeeReceiver]) extends TypedEvent
+case class FeeScheduleAdded(entityId: Bytes32String, feeType: Int, feeReceivers: List[FeeReceiver]) extends TypedEvent with NoAutoDerivation
 // case class FunctionsLocked(selectors: List[String]) extends TypedEvent
 // case class FunctionsUnlocked(selectors: List[String]) extends TypedEvent
 case class InitializeDiamond(sender: AddressString) extends TypedEvent
@@ -141,11 +141,10 @@ case class TokenSaleStarted(entityId: Bytes32String, offerId: Long, tokenSymbol:
 case class TokenStaked(stakerId: Bytes32String, entityId: Bytes32String, tokenId: Bytes32String, amount: BigInt) extends TypedEvent
 case class TokenStakingStarted(entityId: Bytes32String, tokenId: Bytes32String, initDate: Instant, a: Long, r: Long, divider: Long, interval: Int) extends TypedEvent
 case class TokenUnstaked(stakerId: Bytes32String, entityId: Bytes32String, tokenId: Bytes32String, amount: BigInt) extends TypedEvent
-case class UpdateUpgradeExpiration(duration: BigInt) extends TypedEvent // TODO
+case class UpdateUpgradeExpiration(duration: BigInt) extends TypedEvent
 case class TokenWrapped(entityId: Bytes32String, tokenWrapper: AddressString) extends TypedEvent
-case class UpgradeExpiration(duration: BigInt) extends TypedEvent
 case class UpgradeCancelled(id: Bytes32String, who: AddressString) extends TypedEvent
-case class Unsupported(topic: String) extends TypedEvent
+case class Unsupported(topic: String) extends TypedEvent with NoAutoDerivation
 
 trait EventResolver {
   def getTypedEvent(obj: LogObject): Task[TypedEvent]
@@ -203,63 +202,10 @@ case class EventResolverImpl() extends EventResolver {
   private def getName(topic: String): String = eventMap.get(topic).map(_.getName).getOrElse(topic)
 
   import NaymsDiamond.*
-  import scala.deriving.Mirror
 
-  private class AutoBuilder[T <: TypedEvent & Product] {
-    inline def apply[E](get: LogObject => E)(using m: Mirror.ProductOf[T]): LogObject => TypedEvent =
-      obj => AutoMap.from[E, T](get(obj))
-  }
-  private inline def auto[T <: TypedEvent & Product]: AutoBuilder[T] = new AutoBuilder[T]
-
-  private def custom[E, T <: TypedEvent](get: LogObject => E)(build: E => T): LogObject => TypedEvent =
-    obj => build(get(obj))
-
-  private val resolvers: Map[String, LogObject => TypedEvent] = Map(
-    "CollateralRatioUpdated"          -> auto[CollateralRatioUpdated](getCollateralRatioUpdatedEventFromLog),
-    "CreateUpgrade"                   -> auto[CreateUpgrade](getCreateUpgradeEventFromLog),
-    "DividendDistribution"            -> auto[DividendDistribution](getDividendDistributionEventFromLog),
-    "DividendWithdrawn"               -> auto[DividendWithdrawn](getDividendWithdrawnEventFromLog),
-    "EntityCreated"                   -> auto[EntityCreated](getEntityCreatedEventFromLog),
-    "EntityUpdated"                   -> auto[EntityUpdated](getEntityUpdatedEventFromLog),
-    "ExternalDeposit"                 -> auto[ExternalDeposit](getExternalDepositEventFromLog),
-    "ExternalWithdraw"                -> auto[ExternalWithdraw](getExternalWithdrawEventFromLog),
-    "FeePaid"                         -> auto[FeePaid](getFeePaidEventFromLog),
-    "FeeScheduleRemoved"              -> auto[FeeScheduleRemoved](getFeeScheduleRemovedEventFromLog),
-    "InitializeDiamond"               -> auto[InitializeDiamond](getInitializeDiamondEventFromLog),
-    "MakerBasisPointsUpdated"         -> auto[MakerBasisPointsUpdated](getMakerBasisPointsUpdatedEventFromLog),
-    "MaxDividendDenominationsUpdated" -> auto[MaxDividendDenominationsUpdated](getMaxDividendDenominationsUpdatedEventFromLog),
-    "MinimumSellUpdated"              -> auto[MinimumSellUpdated](getMinimumSellUpdatedEventFromLog),
-    "OrderAdded"                      -> auto[OrderAdded](getOrderAddedEventFromLog),
-    "OrderCancelled"                  -> auto[OrderCancelled](getOrderCancelledEventFromLog),
-    "OrderExecuted"                   -> auto[OrderExecuted](getOrderExecutedEventFromLog),
-    "OrderMatched"                    -> auto[OrderMatched](getOrderMatchedEventFromLog),
-    "OwnershipTransferred"            -> auto[OwnershipTransferred](getOwnershipTransferredEventFromLog),
-    "RoleCanAssignUpdated"            -> auto[RoleCanAssignUpdated](getRoleCanAssignUpdatedEventFromLog),
-    "RoleGroupUpdated"                -> auto[RoleGroupUpdated](getRoleGroupUpdatedEventFromLog),
-    "SelfOnboardingCompleted"         -> auto[SelfOnboardingCompleted](getSelfOnboardingCompletedEventFromLog),
-    "SimplePolicyCancelled"           -> auto[SimplePolicyCancelled](getSimplePolicyCancelledEventFromLog),
-    "SimplePolicyClaimPaid"           -> auto[SimplePolicyClaimPaid](getSimplePolicyClaimPaidEventFromLog),
-    "SimplePolicyCreated"             -> auto[SimplePolicyCreated](getSimplePolicyCreatedEventFromLog),
-    "SimplePolicyMatured"             -> auto[SimplePolicyMatured](getSimplePolicyMaturedEventFromLog),
-    "SimplePolicyPremiumPaid"         -> auto[SimplePolicyPremiumPaid](getSimplePolicyPremiumPaidEventFromLog),
-    "SupportedTokenAdded"             -> auto[SupportedTokenAdded](getSupportedTokenAddedEventFromLog),
-    "TokenInfoUpdated"                -> auto[TokenInfoUpdated](getTokenInfoUpdatedEventFromLog),
-    "TokenRewardCollected"            -> auto[TokenRewardCollected](getTokenRewardCollectedEventFromLog),
-    "TokenRewardPaid"                 -> auto[TokenRewardPaid](getTokenRewardPaidEventFromLog),
-    "TokenSaleStarted"                -> auto[TokenSaleStarted](getTokenSaleStartedEventFromLog),
-    "TokenStaked"                     -> auto[TokenStaked](getTokenStakedEventFromLog),
-    "TokenStakingStarted"             -> auto[TokenStakingStarted](getTokenStakingStartedEventFromLog),
-    "TokenUnstaked"                   -> auto[TokenUnstaked](getTokenUnstakedEventFromLog),
-    "UpgradeCancelled"                -> auto[UpgradeCancelled](getUpgradeCancelledEventFromLog),
-    "TokenWrapped"                    -> auto[TokenWrapped](getTokenWrappedEventFromLog),
-    "TokenizationEnabled"             -> auto[TokenizationEnabled](getTokenizationEnabledEventFromLog),
-    "RoleUpdated"                     -> auto[RoleUpdated](getRoleUpdatedEventFromLog),
-    "InternalTokenBalanceUpdate"      -> auto[InternalTokenBalanceUpdate](getInternalTokenBalanceUpdateEventFromLog),
-    "InternalTokenSupplyUpdate"       -> auto[InternalTokenSupplyUpdate](getInternalTokenSupplyUpdateEventFromLog),
-    "ObjectCreated"                   -> auto[ObjectCreated](getObjectCreatedEventFromLog),
-    "ObjectUpdated"                   -> auto[ObjectUpdated](getObjectUpdatedEventFromLog),
-    "UpgradeExpiration"               -> auto[UpgradeExpiration](getUpdateUpgradeExpirationEventFromLog),
-    "FeeScheduleAdded"                -> custom(getFeeScheduleAddedEventFromLog) { e =>
+  private val customResolvers: Map[String, LogObject => TypedEvent] = Map(
+    "FeeScheduleAdded" -> { obj =>
+      val e = getFeeScheduleAddedEventFromLog(obj)
       val feeReceivers = e.feeSchedule.receiver.getValue.asScala
         .zip(e.feeSchedule.basisPoints.getValue.asScala)
         .map((r, bp) => FeeReceiver(r, bp))
@@ -267,6 +213,9 @@ case class EventResolverImpl() extends EventResolver {
       FeeScheduleAdded(entityId = e.entityId, feeType = e.feeType, feeReceivers = feeReceivers)
     }
   )
+
+  private val resolvers: Map[String, LogObject => TypedEvent] =
+    AutoMap.deriveResolvers[TypedEvent, NaymsDiamond] ++ customResolvers
 
   def getTypedEvent(obj: LogObject): Task[TypedEvent] = ZIO.attempt {
     val name = getName(obj.getTopics.get(0))
