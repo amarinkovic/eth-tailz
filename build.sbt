@@ -2,7 +2,7 @@ scalaVersion := "3.3.6"
 
 ThisBuild / name := "eth-tailz"
 
-githubTokenSource := TokenSource.GitConfig("github.token")
+githubTokenSource := TokenSource.Environment("GITHUB_TOKEN") || TokenSource.GitConfig("github.token")
 
 resolvers += Resolver.githubPackages("amarinkovic", "contracts-v3-java")
 

@@ -57,6 +57,7 @@ import zio.{Task, ZIO, ZLayer}
 import java.math.BigInteger
 import scala.Conversion
 import scala.jdk.CollectionConverters.*
+import scala.util.control.NonFatal
 import java.time.Instant
 import org.web3j.abi.datatypes.Address
 
@@ -219,7 +220,10 @@ case class EventResolverImpl() extends EventResolver {
 
   def getTypedEvent(obj: LogObject): Task[TypedEvent] = ZIO.attempt {
     val name = getName(obj.getTopics.get(0))
-    resolvers.get(name).fold[TypedEvent](Unsupported(name))(_(obj))
+    resolvers.get(name).fold[TypedEvent](Unsupported(name)) { resolver =>
+      try resolver(obj)
+      catch { case NonFatal(_) => Unsupported(name) }
+    }
   }
 }
 
