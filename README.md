@@ -24,27 +24,6 @@ Run it by giving it a contract address and a block number from which to start st
 ./target/eth-tailz --forever --polling-interval 12 --chunk-size 10000 0x39e2f550fef9ee15b459d16bD4B243b04b1f60e5 17088059
 ```
 
-### Workaround for the sbt-zio-cli plugin
-
-Currently there is a problem with fetching the `sbt-zio-cli` jar from the internet. It is required to build it locally. Clone the [zio-cli](https://github.com/zio/zio-cli) project locally and build the plugin and publish it to you local environment. To do that, first of all make sure the following is set for the `sbt-zio-cli` module of this project:
-
-```groovy
-publish / skip     := false,
-```
-
-Then publish the jar file by starting the `sbt` and running the followint tasks:
-
-```sbt
-project sbtZioCli
-publishLocal
-```
- Jar file will be published locally somehere under:
- ```zsh
- ~/.ivy2/local/zio.cli.sbt/sbt-zio-cli/scala_2.12/sbt_1.0/
- ```
-
-Find the exact version produced and update it in this projects `plugins.sbt`
-
 ### Workaround GraalVM issues
 
 Current version of this code works with Graal VM Java 21. 
