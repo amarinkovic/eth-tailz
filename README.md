@@ -24,6 +24,16 @@ Run it by giving it a contract address and a block number from which to start st
 ./target/eth-tailz --forever --polling-interval 12 --chunk-size 10000 0x39e2f550fef9ee15b459d16bD4B243b04b1f60e5 17088059
 ```
 
+### Metals MCP server
+
+This project ships with a `.mcp.json` that points Claude Code at a [Metals](https://scalameta.org/metals/) MCP server on `http://localhost:37765/mcp`. Start it from the project root with:
+
+```zsh
+metals-mcp --workspace . --client claude --port 37765
+```
+
+Then run `/mcp` in Claude Code to confirm the `metals` server connects. See [Scala with Claude Code](https://www.yannmoisan.com/scala-with-claude-code.html) for more background.
+
 ### Workaround GraalVM issues
 
 Current version of this code works with Graal VM Java 21. 
