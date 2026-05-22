@@ -1,4 +1,4 @@
-scalaVersion := "3.3.6"
+scalaVersion := "3.3.7"
 
 ThisBuild / name := "eth-tailz"
 
@@ -8,12 +8,12 @@ resolvers += Resolver.githubPackages("amarinkovic", "contracts-v3-java")
 
 libraryDependencies ++= Seq(
   "io.nayms" % "contracts" % "3.9.3",
-  "dev.zio" %% "zio" % "2.0.13",
-  "dev.zio" %% "zio-streams" % "2.0.13",
+  "dev.zio" %% "zio" % "2.1.26",
+  "dev.zio" %% "zio-streams" % "2.1.26",
   "dev.zio" %% "zio-config" % "3.0.7",
-  "dev.zio" %% "zio-cli" % "0.7.2",
-  "org.web3j" % "core" % "4.9.5",
-  "ch.qos.logback" % "logback-classic" % "1.4.7"
+  "dev.zio" %% "zio-cli" % "0.8.1",
+  "org.web3j" % "core" % "4.14.0",
+  "ch.qos.logback" % "logback-classic" % "1.5.32"
 )
 
 addCommandAlias("generateCliNativeConfig", "nativeImageRunAgent")
